@@ -1,8 +1,23 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { PrismaModule } from './infrastructure/persistence/prisma/prisma.module';
+import { SecurityModule } from './infrastructure/security/security.module';
 import { ProductoModule } from './infrastructure/http/producto/producto.module';
+import { AuthModule } from './infrastructure/http/auth/auth.module';
+import { UsuarioModule } from './infrastructure/http/usuario/usuario.module';
+import { ClienteModule } from './infrastructure/http/cliente/cliente.module';
+import { SucursalModule } from './infrastructure/http/sucursal/sucursal.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), ProductoModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    SecurityModule,
+    ProductoModule,
+    AuthModule,
+    UsuarioModule,
+    ClienteModule,
+    SucursalModule,
+  ],
 })
 export class AppModule {}

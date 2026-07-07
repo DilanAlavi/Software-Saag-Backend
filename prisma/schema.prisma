@@ -15,3 +15,98 @@ model Producto {
   stock     Int
   createdAt DateTime @default(now())
 }
+
+enum TipoUbicacion {
+  CENTRAL
+  SUCURSAL
+  DEPOSITO
+}
+
+enum RolUsuario {
+  ADMIN
+  ADMIN_SUCURSAL
+  VENDEDOR
+}
+
+enum RolCliente {
+  MAYOR_1
+  MAYOR_2
+  REGULAR
+  REGULAR_2
+  CARPINTERO
+  PLOMERO
+}
+
+model Sucursal {
+  id           Int           @id @default(autoincrement())
+  nombre       String
+  tipo         TipoUbicacion
+  departamento String?
+  ciudad       String?
+  zona         String?
+  referencia   String?
+  estado       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  usuarios     Usuario[]
+  clientes     Cliente[]
+}
+
+model Usuario {
+  id              Int        @id @default(autoincrement())
+  nombre          String
+  apellidoPaterno String
+  apellidoMaterno String?
+  ci              String?    @unique
+  celular         String
+  genero          String?
+  username        String     @unique
+  password        String
+  rol             RolUsuario
+  estado          Boolean    @default(true)
+  fechaRegistro   DateTime   @default(now())
+  sucursalId      Int?
+  sucursal        Sucursal?  @relation(fields: [sucursalId], references: [id])
+
+  historialComoSujeto HistorialEstadoUsuario[] @relation("HistorialUsuarioSujeto")
+  historialComoActor  HistorialEstadoUsuario[] @relation("HistorialUsuarioActor")
+  historialClientesRealizado HistorialEstadoCliente[]
+}
+
+model Cliente {
+  id              Int        @id @default(autoincrement())
+  nombre          String
+  apellidoPaterno String
+  apellidoMaterno String?
+  ci              String?    @unique
+  celular         String
+  genero          String?
+  rol             RolCliente
+  estado          Boolean    @default(true)
+  fechaRegistro   DateTime   @default(now())
+  sucursalId      Int?
+  sucursal        Sucursal?  @relation(fields: [sucursalId], references: [id])
+
+  historial HistorialEstadoCliente[]
+}
+
+model HistorialEstadoUsuario {
+  id             Int      @id @default(autoincrement())
+  usuarioId      Int
+  usuario        Usuario  @relation("HistorialUsuarioSujeto", fields: [usuarioId], references: [id])
+  estadoAnterior Boolean
+  estadoNuevo    Boolean
+  fecha          DateTime @default(now())
+  realizadoPorId Int
+  realizadoPor   Usuario  @relation("HistorialUsuarioActor", fields: [realizadoPorId], references: [id])
+}
+
+model HistorialEstadoCliente {
+  id             Int      @id @default(autoincrement())
+  clienteId      Int
+  cliente        Cliente  @relation(fields: [clienteId], references: [id])
+  estadoAnterior Boolean
+  estadoNuevo    Boolean
+  fecha          DateTime @default(now())
+  realizadoPorId Int
+  realizadoPor   Usuario  @relation(fields: [realizadoPorId], references: [id])
+}
