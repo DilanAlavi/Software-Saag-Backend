@@ -7,6 +7,7 @@ import { AuthModule } from './infrastructure/http/auth/auth.module';
 import { UsuarioModule } from './infrastructure/http/usuario/usuario.module';
 import { ClienteModule } from './infrastructure/http/cliente/cliente.module';
 import { SucursalModule } from './infrastructure/http/sucursal/sucursal.module';
+import { MarcaModule } from './infrastructure/http/marca/marca.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { SucursalModule } from './infrastructure/http/sucursal/sucursal.module';
     UsuarioModule,
     ClienteModule,
     SucursalModule,
+    MarcaModule,
   ],
 })
 export class AppModule {}

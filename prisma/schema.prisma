@@ -8,18 +8,54 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model Producto {
-  id        Int      @id @default(autoincrement())
-  nombre    String
-  precio    Decimal
-  stock     Int
-  createdAt DateTime @default(now())
-}
-
 enum TipoUbicacion {
   CENTRAL
   SUCURSAL
   DEPOSITO
+}
+
+enum TipoProducto {
+  CARPINTERIA
+  FERRETERIA
+  PLOMERIA
+  ELECTRICO
+}
+
+enum AccionProducto {
+  CREACION
+  ELIMINACION
+}
+
+model Producto {
+  id                  Int          @id @default(autoincrement())
+  nombre              String
+  nombresAlternativos String[]
+  marca               String?
+  tipoProducto        TipoProducto
+  codigo              String?      @unique
+  cantidad            Int          @default(0)
+  precioCosto         Decimal?
+  estado              Boolean      @default(true)
+  fechaRegistro       DateTime     @default(now())
+
+  historial HistorialProducto[]
+}
+
+model Marca {
+  id            Int      @id @default(autoincrement())
+  nombre        String   @unique
+  estado        Boolean  @default(true)
+  fechaRegistro DateTime @default(now())
+}
+
+model HistorialProducto {
+  id             Int            @id @default(autoincrement())
+  productoId     Int
+  producto       Producto       @relation(fields: [productoId], references: [id])
+  accion         AccionProducto
+  fecha          DateTime       @default(now())
+  realizadoPorId Int
+  realizadoPor   Usuario        @relation(fields: [realizadoPorId], references: [id])
 }
 
 enum RolUsuario {
@@ -70,6 +106,7 @@ model Usuario {
   historialComoSujeto HistorialEstadoUsuario[] @relation("HistorialUsuarioSujeto")
   historialComoActor  HistorialEstadoUsuario[] @relation("HistorialUsuarioActor")
   historialClientesRealizado HistorialEstadoCliente[]
+  historialProductosRealizado HistorialProducto[]
 }
 
 model Cliente {
