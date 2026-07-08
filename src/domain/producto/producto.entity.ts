@@ -8,8 +8,6 @@ export class Producto {
     public readonly marca: string | null,
     public readonly tipoProducto: TipoProducto,
     public readonly codigo: string | null,
-    public readonly cantidad: number,
-    public readonly precioCosto: number | null,
     public readonly estado: boolean,
     public readonly fechaRegistro: Date,
   ) {}

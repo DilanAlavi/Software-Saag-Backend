@@ -14,8 +14,6 @@ export interface CrearProductoInput {
   marca?: string;
   tipoProducto: string;
   codigo?: string;
-  cantidad?: number;
-  precioCosto?: number;
 }
 
 export interface HistorialProductoRegistro {
@@ -25,10 +23,20 @@ export interface HistorialProductoRegistro {
   realizadoPorId: number;
 }
 
+export interface ActualizarProductoInput {
+  nombre?: string;
+  nombresAlternativos?: string[];
+  marca?: string;
+  tipoProducto?: string;
+  codigo?: string;
+}
+
 export interface ProductoRepository {
   findAll(filtros: ProductoFiltros): Promise<Producto[]>;
   findById(id: number): Promise<Producto | null>;
   crearConHistorial(data: CrearProductoInput, realizadoPorId: number): Promise<Producto>;
+  actualizar(id: number, data: ActualizarProductoInput): Promise<Producto>;
   eliminarConHistorial(id: number, realizadoPorId: number): Promise<Producto>;
   historial(productoId: number): Promise<HistorialProductoRegistro[]>;
+  marcasDistintas(): Promise<string[]>;
 }

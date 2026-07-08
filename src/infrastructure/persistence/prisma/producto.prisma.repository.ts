@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  ActualizarProductoInput,
   CrearProductoInput,
   HistorialProductoRegistro,
   ProductoFiltros,
@@ -20,8 +21,6 @@ export class ProductoPrismaRepository implements ProductoRepository {
       p.marca,
       p.tipoProducto,
       p.codigo,
-      p.cantidad,
-      p.precioCosto !== null && p.precioCosto !== undefined ? Number(p.precioCosto) : null,
       p.estado,
       p.fechaRegistro,
     );
@@ -62,8 +61,6 @@ export class ProductoPrismaRepository implements ProductoRepository {
           marca: data.marca,
           tipoProducto: data.tipoProducto as any,
           codigo: data.codigo,
-          cantidad: data.cantidad ?? 0,
-          precioCosto: data.precioCosto,
         },
       });
       await tx.historialProducto.create({
@@ -75,6 +72,20 @@ export class ProductoPrismaRepository implements ProductoRepository {
       });
       return this.toEntity(creado);
     });
+  }
+
+  async actualizar(id: number, data: ActualizarProductoInput): Promise<Producto> {
+    const actualizado = await this.prisma.producto.update({
+      where: { id },
+      data: {
+        nombre: data.nombre,
+        nombresAlternativos: data.nombresAlternativos,
+        marca: data.marca,
+        tipoProducto: data.tipoProducto as any,
+        codigo: data.codigo,
+      },
+    });
+    return this.toEntity(actualizado);
   }
 
   async eliminarConHistorial(id: number, realizadoPorId: number): Promise<Producto> {
@@ -96,5 +107,15 @@ export class ProductoPrismaRepository implements ProductoRepository {
       where: { productoId },
       orderBy: { fecha: 'desc' },
     });
+  }
+
+  async marcasDistintas(): Promise<string[]> {
+    const rows = await this.prisma.producto.findMany({
+      where: { estado: true, marca: { not: null } },
+      distinct: ['marca'],
+      select: { marca: true },
+      orderBy: { marca: 'asc' },
+    });
+    return rows.map((r) => r.marca).filter((m): m is string => Boolean(m));
   }
 }

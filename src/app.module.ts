@@ -7,7 +7,8 @@ import { AuthModule } from './infrastructure/http/auth/auth.module';
 import { UsuarioModule } from './infrastructure/http/usuario/usuario.module';
 import { ClienteModule } from './infrastructure/http/cliente/cliente.module';
 import { SucursalModule } from './infrastructure/http/sucursal/sucursal.module';
-import { MarcaModule } from './infrastructure/http/marca/marca.module';
+import { PrecioModule } from './infrastructure/http/precio/precio.module';
+import { StockModule } from './infrastructure/http/stock/stock.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { MarcaModule } from './infrastructure/http/marca/marca.module';
     UsuarioModule,
     ClienteModule,
     SucursalModule,
-    MarcaModule,
+    PrecioModule,
+    StockModule,
   ],
 })
 export class AppModule {}

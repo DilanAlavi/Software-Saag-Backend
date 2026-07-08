@@ -33,19 +33,48 @@ model Producto {
   marca               String?
   tipoProducto        TipoProducto
   codigo              String?      @unique
-  cantidad            Int          @default(0)
-  precioCosto         Decimal?
   estado              Boolean      @default(true)
   fechaRegistro       DateTime     @default(now())
 
   historial HistorialProducto[]
+  precio    Precio?
+  stock     Stock[]
 }
 
-model Marca {
-  id            Int      @id @default(autoincrement())
-  nombre        String   @unique
-  estado        Boolean  @default(true)
-  fechaRegistro DateTime @default(now())
+model Stock {
+  id                 Int      @id @default(autoincrement())
+  productoId         Int
+  producto           Producto @relation(fields: [productoId], references: [id])
+  sucursalId         Int
+  sucursal           Sucursal @relation(fields: [sucursalId], references: [id])
+  area               String?
+  cantidad           Int?
+  fechaActualizacion DateTime @updatedAt
+
+  @@unique([productoId, sucursalId])
+}
+
+model Precio {
+  id          Int      @id @default(autoincrement())
+  productoId  Int      @unique
+  producto    Producto @relation(fields: [productoId], references: [id])
+
+  precioCosto  Decimal
+
+  menor1       Decimal
+  menor2       Decimal
+  mayor1       Decimal
+  mayor2       Decimal
+  plomeria     Decimal
+  carpinteria  Decimal
+  electricista Decimal
+
+  precioCaja Decimal?
+
+  cantidadMinimaDescuentoMenor1 Int?
+  precioDescuentoMenor1         Decimal?
+
+  fechaActualizacion DateTime @updatedAt
 }
 
 model HistorialProducto {
@@ -85,6 +114,7 @@ model Sucursal {
   createdAt    DateTime      @default(now())
   usuarios     Usuario[]
   clientes     Cliente[]
+  stock        Stock[]
 }
 
 model Usuario {

@@ -1,8 +1,9 @@
 import { IsArray, IsIn, IsOptional, IsString } from 'class-validator';
 
-export class CrearProductoDto {
+export class ActualizarProductoDto {
+  @IsOptional()
   @IsString()
-  nombre: string;
+  nombre?: string;
 
   @IsOptional()
   @IsArray()
@@ -13,8 +14,9 @@ export class CrearProductoDto {
   @IsString()
   marca?: string;
 
+  @IsOptional()
   @IsIn(['CARPINTERIA', 'FERRETERIA', 'PLOMERIA', 'ELECTRICO'])
-  tipoProducto: string;
+  tipoProducto?: string;
 
   @IsOptional()
   @IsString()
