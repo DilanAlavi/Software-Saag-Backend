@@ -3,6 +3,7 @@ import * as bcrypt from 'bcryptjs';
 import { USUARIO_REPOSITORY, UsuarioFiltros, UsuarioRepository } from '../../domain/usuario/usuario.repository';
 import { CrearUsuarioDto } from './dto/crear-usuario.dto';
 import { generarPassword, generarUsername } from './generar-credenciales';
+import { UsuarioActivoCacheService } from '../../infrastructure/security/usuario-activo-cache.service';
 
 interface UsuarioActual {
   sub: number;
@@ -15,6 +16,7 @@ export class UsuarioService {
   constructor(
     @Inject(USUARIO_REPOSITORY)
     private readonly usuarioRepository: UsuarioRepository,
+    private readonly usuarioActivoCache: UsuarioActivoCacheService,
   ) {}
 
   listar(usuarioActual: UsuarioActual, filtros: UsuarioFiltros) {
@@ -84,7 +86,9 @@ export class UsuarioService {
       }
     }
 
-    return this.usuarioRepository.updateEstadoConHistorial(id, estadoNuevo, usuarioActual.sub);
+    const actualizado = await this.usuarioRepository.updateEstadoConHistorial(id, estadoNuevo, usuarioActual.sub);
+    this.usuarioActivoCache.invalidar(id);
+    return actualizado;
   }
 
   historial(id: number) {

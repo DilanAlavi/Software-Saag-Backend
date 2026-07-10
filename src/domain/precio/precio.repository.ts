@@ -12,6 +12,7 @@ export interface GuardarPrecioInput {
   carpinteria: number;
   electricista: number;
   precioCaja?: number;
+  precioPiezaSuelta?: number;
   cantidadMinimaDescuentoMenor1?: number;
   precioDescuentoMenor1?: number;
 }

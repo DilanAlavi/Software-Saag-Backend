@@ -11,6 +11,7 @@ const CATEGORIAS_VENTA: { campo: keyof GuardarPrecioDto; etiqueta: string }[] = 
   { campo: 'carpinteria', etiqueta: 'Carpintería' },
   { campo: 'electricista', etiqueta: 'Electricista' },
   { campo: 'precioCaja', etiqueta: 'Caja' },
+  { campo: 'precioPiezaSuelta', etiqueta: 'Pieza suelta' },
 ];
 
 @Injectable()

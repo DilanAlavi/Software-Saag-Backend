@@ -9,6 +9,8 @@ import { ClienteModule } from './infrastructure/http/cliente/cliente.module';
 import { SucursalModule } from './infrastructure/http/sucursal/sucursal.module';
 import { PrecioModule } from './infrastructure/http/precio/precio.module';
 import { StockModule } from './infrastructure/http/stock/stock.module';
+import { GrupoPrecioEspecialModule } from './infrastructure/http/grupo-precio-especial/grupo-precio-especial.module';
+import { VentaModule } from './infrastructure/http/venta/venta.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { StockModule } from './infrastructure/http/stock/stock.module';
     SucursalModule,
     PrecioModule,
     StockModule,
+    GrupoPrecioEspecialModule,
+    VentaModule,
   ],
 })
 export class AppModule {}

@@ -5,6 +5,8 @@ export class Stock {
     public readonly sucursalId: number,
     public readonly area: string | null,
     public readonly cantidad: number | null,
+    public readonly confirmado: boolean,
+    public readonly cantidadVendidaAcumulada: number,
     public readonly fechaActualizacion: Date,
   ) {}
 }

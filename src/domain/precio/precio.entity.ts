@@ -11,6 +11,7 @@ export class Precio {
     public readonly carpinteria: number,
     public readonly electricista: number,
     public readonly precioCaja: number | null,
+    public readonly precioPiezaSuelta: number | null,
     public readonly cantidadMinimaDescuentoMenor1: number | null,
     public readonly precioDescuentoMenor1: number | null,
     public readonly fechaActualizacion: Date,

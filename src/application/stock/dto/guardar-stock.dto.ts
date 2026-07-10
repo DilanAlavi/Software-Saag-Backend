@@ -14,5 +14,10 @@ export class GuardarStockDto {
   @IsOptional()
   @IsInt()
   @Min(0)
-  cantidad?: number;
+  cajas?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  piezas?: number;
 }

@@ -26,6 +26,23 @@ enum AccionProducto {
   ELIMINACION
 }
 
+enum ModalidadVentaPaquete {
+  PIEZA
+  PAQUETE
+  AMBOS
+}
+
+enum EstadoVenta {
+  PENDIENTE
+  PAGADO
+  CANCELADO
+}
+
+enum MotivoCancelacion {
+  NO_RECOGIO
+  CLIENTE_CANCELO
+}
+
 model Producto {
   id                  Int          @id @default(autoincrement())
   nombre              String
@@ -36,22 +53,64 @@ model Producto {
   estado              Boolean      @default(true)
   fechaRegistro       DateTime     @default(now())
 
+  unidadesPorPaquete  Int?
+  unidadesPorCaja     Int?
+  ventaSoloPorPaquete Boolean      @default(false)
+
   historial HistorialProducto[]
   precio    Precio?
   stock     Stock[]
+  gruposPrecioEspecial GrupoPrecioEspecialProducto[]
+  detallesVenta DetalleVenta[]
 }
 
 model Stock {
-  id                 Int      @id @default(autoincrement())
-  productoId         Int
-  producto           Producto @relation(fields: [productoId], references: [id])
-  sucursalId         Int
-  sucursal           Sucursal @relation(fields: [sucursalId], references: [id])
-  area               String?
-  cantidad           Int?
-  fechaActualizacion DateTime @updatedAt
+  id                        Int      @id @default(autoincrement())
+  productoId                Int
+  producto                  Producto @relation(fields: [productoId], references: [id])
+  sucursalId                Int
+  sucursal                  Sucursal @relation(fields: [sucursalId], references: [id])
+  area                      String?
+  cantidad                  Int?
+  confirmado                Boolean  @default(false)
+  cantidadVendidaAcumulada  Int      @default(0)
+  fechaActualizacion        DateTime @updatedAt
 
   @@unique([productoId, sucursalId])
+}
+
+model Venta {
+  id                 Int                @id @default(autoincrement())
+  clienteId          Int
+  cliente            Cliente            @relation(fields: [clienteId], references: [id])
+  usuarioId          Int
+  usuario            Usuario            @relation(fields: [usuarioId], references: [id])
+  sucursalId         Int
+  sucursal           Sucursal           @relation(fields: [sucursalId], references: [id])
+  estado             EstadoVenta        @default(PENDIENTE)
+  motivoCancelacion  MotivoCancelacion?
+  fecha              DateTime           @default(now())
+  total              Decimal
+  efectivoRecibido   Decimal?
+  vuelto             Decimal?
+  fechaPago          DateTime?
+  reporte            String?
+  fechaReporte       DateTime?
+
+  detalles DetalleVenta[]
+}
+
+model DetalleVenta {
+  id              Int     @id @default(autoincrement())
+  ventaId         Int
+  venta           Venta   @relation(fields: [ventaId], references: [id])
+  productoId      Int
+  producto        Producto @relation(fields: [productoId], references: [id])
+  nombreProducto  String
+  cantidad        Int
+  precioUnitario  Decimal
+  total           Decimal
+  entregado       Boolean @default(false)
 }
 
 model Precio {
@@ -69,12 +128,44 @@ model Precio {
   carpinteria  Decimal
   electricista Decimal
 
-  precioCaja Decimal?
+  precioCaja        Decimal?
+  precioPiezaSuelta Decimal?
 
   cantidadMinimaDescuentoMenor1 Int?
   precioDescuentoMenor1         Decimal?
 
   fechaActualizacion DateTime @updatedAt
+}
+
+model GrupoPrecioEspecial {
+  id                Int        @id @default(autoincrement())
+  nombre            String     @unique
+  categoriaAsignada RolCliente
+  estado            Boolean    @default(true)
+  fechaRegistro      DateTime  @default(now())
+
+  productos GrupoPrecioEspecialProducto[]
+  clientes  ClienteGrupoPrecioEspecial[]
+}
+
+model GrupoPrecioEspecialProducto {
+  id         Int                 @id @default(autoincrement())
+  grupoId    Int
+  grupo      GrupoPrecioEspecial @relation(fields: [grupoId], references: [id])
+  productoId Int
+  producto   Producto            @relation(fields: [productoId], references: [id])
+
+  @@unique([grupoId, productoId])
+}
+
+model ClienteGrupoPrecioEspecial {
+  id        Int                 @id @default(autoincrement())
+  clienteId Int
+  cliente   Cliente             @relation(fields: [clienteId], references: [id])
+  grupoId   Int
+  grupo     GrupoPrecioEspecial @relation(fields: [grupoId], references: [id])
+
+  @@unique([clienteId, grupoId])
 }
 
 model HistorialProducto {
@@ -96,25 +187,27 @@ enum RolUsuario {
 enum RolCliente {
   MAYOR_1
   MAYOR_2
-  REGULAR
-  REGULAR_2
-  CARPINTERO
-  PLOMERO
+  STANDARD_1
+  STANDARD_2
+  CARPINTERIA
+  PLOMERIA
+  ELECTRICISTA
 }
 
 model Sucursal {
-  id           Int           @id @default(autoincrement())
-  nombre       String
-  tipo         TipoUbicacion
-  departamento String?
-  ciudad       String?
-  zona         String?
-  referencia   String?
-  estado       Boolean       @default(true)
-  createdAt    DateTime      @default(now())
-  usuarios     Usuario[]
-  clientes     Cliente[]
-  stock        Stock[]
+  id                     Int                    @id @default(autoincrement())
+  nombre                 String
+  tipo                   TipoUbicacion
+  departamento           String?
+  ciudad                 String?
+  zona                   String?
+  referencia             String?
+  estado                 Boolean                @default(true)
+  createdAt              DateTime               @default(now())
+  modalidadVentaPaquete  ModalidadVentaPaquete?
+  usuarios               Usuario[]
+  stock                  Stock[]
+  ventas                 Venta[]
 }
 
 model Usuario {
@@ -137,6 +230,7 @@ model Usuario {
   historialComoActor  HistorialEstadoUsuario[] @relation("HistorialUsuarioActor")
   historialClientesRealizado HistorialEstadoCliente[]
   historialProductosRealizado HistorialProducto[]
+  ventas Venta[]
 }
 
 model Cliente {
@@ -150,10 +244,10 @@ model Cliente {
   rol             RolCliente
   estado          Boolean    @default(true)
   fechaRegistro   DateTime   @default(now())
-  sucursalId      Int?
-  sucursal        Sucursal?  @relation(fields: [sucursalId], references: [id])
 
   historial HistorialEstadoCliente[]
+  gruposPrecioEspecial ClienteGrupoPrecioEspecial[]
+  ventas Venta[]
 }
 
 model HistorialEstadoUsuario {

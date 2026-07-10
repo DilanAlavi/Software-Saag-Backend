@@ -39,6 +39,11 @@ export class GuardarPrecioDto {
   precioCaja?: number;
 
   @IsOptional()
+  @IsNumber()
+  @Min(0)
+  precioPiezaSuelta?: number;
+
+  @IsOptional()
   @IsInt()
   @Min(1)
   cantidadMinimaDescuentoMenor1?: number;

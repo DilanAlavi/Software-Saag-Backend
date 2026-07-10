@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 import { StockService } from '../../../application/stock/stock.service';
 import { GuardarStockDto } from '../../../application/stock/dto/guardar-stock.dto';
+import { ConfirmarStockDto } from '../../../application/stock/dto/confirmar-stock.dto';
 import { JwtAuthGuard } from '../../security/jwt-auth.guard';
 import { RolesGuard } from '../../security/roles.guard';
 import { Roles } from '../../security/roles.decorator';
@@ -20,5 +21,11 @@ export class StockController {
   @Roles('ADMIN', 'ADMIN_SUCURSAL')
   guardar(@Body() dto: GuardarStockDto) {
     return this.stockService.guardar(dto);
+  }
+
+  @Put('confirmar')
+  @Roles('ADMIN', 'ADMIN_SUCURSAL')
+  confirmar(@Body() dto: ConfirmarStockDto) {
+    return this.stockService.confirmar(dto);
   }
 }

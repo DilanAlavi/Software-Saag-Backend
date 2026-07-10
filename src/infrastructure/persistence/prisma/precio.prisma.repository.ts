@@ -24,6 +24,7 @@ export class PrecioPrismaRepository implements PrecioRepository {
       Number(p.carpinteria),
       Number(p.electricista),
       p.precioCaja !== null && p.precioCaja !== undefined ? Number(p.precioCaja) : null,
+      p.precioPiezaSuelta !== null && p.precioPiezaSuelta !== undefined ? Number(p.precioPiezaSuelta) : null,
       p.cantidadMinimaDescuentoMenor1 ?? null,
       p.precioDescuentoMenor1 !== null && p.precioDescuentoMenor1 !== undefined ? Number(p.precioDescuentoMenor1) : null,
       p.fechaActualizacion,

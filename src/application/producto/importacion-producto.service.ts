@@ -11,6 +11,9 @@ const ENCABEZADOS = [
   'Marca',
   'Tipo',
   'Codigo',
+  'Unidades por paquete',
+  'Unidades por caja',
+  'Vender solo por paquete (SI/NO)',
   'Precio Base',
   'Standard 1',
   'Standard 2',
@@ -20,6 +23,7 @@ const ENCABEZADOS = [
   'Carpinteria',
   'Electricista',
   'Precio Caja',
+  'Precio pieza suelta',
   'Cantidad minima descuento Standard 1',
   'Precio descuento Standard 1',
 ];
@@ -43,6 +47,9 @@ export class ImportacionProductoService {
       'Truper',
       'FERRETERIA',
       '7506005923456',
+      10,
+      100,
+      'NO',
       45.5,
       65,
       60,
@@ -52,6 +59,7 @@ export class ImportacionProductoService {
       58,
       58,
       50,
+      '',
       10,
       62,
     ];
@@ -80,17 +88,29 @@ export class ImportacionProductoService {
             marca: datos.marca,
             tipoProducto: datos.tipoProducto,
             codigo: datos.codigo,
+            unidadesPorPaquete: datos.unidadesPorPaquete,
+            unidadesPorCaja: datos.unidadesPorCaja,
+            ventaSoloPorPaquete: datos.ventaSoloPorPaquete,
           },
           realizadoPorId,
         );
         await this.precioRepository.guardar(producto.id, datos.precios);
         creados++;
       } catch (e: any) {
-        errores.push({ fila: numeroFila, mensaje: e.message ?? 'Error desconocido' });
+        errores.push({ fila: numeroFila, mensaje: this.mensajeDeError(e) });
       }
     }
 
     return { creados, errores };
+  }
+
+  private mensajeDeError(e: any): string {
+    if (e?.code === 'P2002') {
+      const campo = Array.isArray(e.meta?.target) ? e.meta.target.join(', ') : e.meta?.target;
+      const etiqueta = campo === 'codigo' ? 'código' : campo;
+      return `Ya existe un producto con ese ${etiqueta ?? 'dato'} — no se puede repetir`;
+    }
+    return e?.message ?? 'Error desconocido';
   }
 
   private validarFila(fila: any) {
@@ -108,6 +128,30 @@ export class ImportacionProductoService {
       .split(',')
       .map((n: string) => n.trim())
       .filter(Boolean);
+
+    const enteroOpcional = (campo: string): number | undefined => {
+      const crudo = fila[campo];
+      if (crudo === '' || crudo === undefined || crudo === null) return undefined;
+      const valor = Number(crudo);
+      if (isNaN(valor) || !Number.isInteger(valor) || valor <= 0) {
+        throw new Error(`El campo "${campo}" debe ser un número entero mayor a 0`);
+      }
+      return valor;
+    };
+
+    const unidadesPorPaquete = enteroOpcional('Unidades por paquete');
+    const unidadesPorCaja = enteroOpcional('Unidades por caja');
+
+    const ventaSoloPorPaqueteRaw = String(fila['Vender solo por paquete (SI/NO)'] ?? '').trim().toUpperCase();
+    let ventaSoloPorPaquete = false;
+    if (ventaSoloPorPaqueteRaw === 'SI') {
+      ventaSoloPorPaquete = true;
+    } else if (ventaSoloPorPaqueteRaw !== '' && ventaSoloPorPaqueteRaw !== 'NO') {
+      throw new Error('El campo "Vender solo por paquete (SI/NO)" debe ser SI o NO (o dejarse en blanco)');
+    }
+    if (ventaSoloPorPaquete && unidadesPorPaquete === undefined) {
+      throw new Error('Si "Vender solo por paquete" es SI, debes indicar "Unidades por paquete"');
+    }
 
     const numero = (campo: string): number => {
       const crudo = fila[campo];
@@ -148,6 +192,13 @@ export class ImportacionProductoService {
       throw new Error(`El precio de Caja debe ser mayor al Precio Base (${precioCosto})`);
     }
 
+    const precioPiezaSueltaRaw = fila['Precio pieza suelta'];
+    const precioPiezaSuelta =
+      precioPiezaSueltaRaw !== '' && precioPiezaSueltaRaw !== undefined ? Number(precioPiezaSueltaRaw) : undefined;
+    if (precioPiezaSuelta !== undefined && (isNaN(precioPiezaSuelta) || precioPiezaSuelta <= precioCosto)) {
+      throw new Error(`El precio de pieza suelta debe ser mayor al Precio Base (${precioCosto})`);
+    }
+
     const cantidadMinimaRaw = fila['Cantidad minima descuento Standard 1'];
     const precioDescuentoRaw = fila['Precio descuento Standard 1'];
     const cantidadMinimaDescuentoMenor1 =
@@ -170,6 +221,9 @@ export class ImportacionProductoService {
       codigo,
       tipoProducto,
       nombresAlternativos,
+      unidadesPorPaquete,
+      unidadesPorCaja,
+      ventaSoloPorPaquete,
       precios: {
         precioCosto,
         menor1,
@@ -180,6 +234,7 @@ export class ImportacionProductoService {
         carpinteria,
         electricista,
         precioCaja,
+        precioPiezaSuelta,
         cantidadMinimaDescuentoMenor1,
         precioDescuentoMenor1,
       },

@@ -10,5 +10,8 @@ export class Producto {
     public readonly codigo: string | null,
     public readonly estado: boolean,
     public readonly fechaRegistro: Date,
+    public readonly unidadesPorPaquete: number | null,
+    public readonly unidadesPorCaja: number | null,
+    public readonly ventaSoloPorPaquete: boolean,
   ) {}
 }

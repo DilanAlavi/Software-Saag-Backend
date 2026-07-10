@@ -23,6 +23,9 @@ export class ProductoPrismaRepository implements ProductoRepository {
       p.codigo,
       p.estado,
       p.fechaRegistro,
+      p.unidadesPorPaquete,
+      p.unidadesPorCaja,
+      p.ventaSoloPorPaquete,
     );
   }
 
@@ -61,6 +64,9 @@ export class ProductoPrismaRepository implements ProductoRepository {
           marca: data.marca,
           tipoProducto: data.tipoProducto as any,
           codigo: data.codigo,
+          unidadesPorPaquete: data.unidadesPorPaquete,
+          unidadesPorCaja: data.unidadesPorCaja,
+          ventaSoloPorPaquete: data.ventaSoloPorPaquete ?? false,
         },
       });
       await tx.historialProducto.create({
@@ -83,6 +89,9 @@ export class ProductoPrismaRepository implements ProductoRepository {
         marca: data.marca,
         tipoProducto: data.tipoProducto as any,
         codigo: data.codigo,
+        unidadesPorPaquete: data.unidadesPorPaquete,
+        unidadesPorCaja: data.unidadesPorCaja,
+        ventaSoloPorPaquete: data.ventaSoloPorPaquete,
       },
     });
     return this.toEntity(actualizado);

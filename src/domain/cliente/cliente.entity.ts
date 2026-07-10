@@ -1,10 +1,17 @@
 export type RolCliente =
   | 'MAYOR_1'
   | 'MAYOR_2'
-  | 'REGULAR'
-  | 'REGULAR_2'
-  | 'CARPINTERO'
-  | 'PLOMERO';
+  | 'STANDARD_1'
+  | 'STANDARD_2'
+  | 'CARPINTERIA'
+  | 'PLOMERIA'
+  | 'ELECTRICISTA';
+
+export interface GrupoDeCliente {
+  id: number;
+  nombre: string;
+  categoriaAsignada: string;
+}
 
 export class Cliente {
   constructor(
@@ -17,8 +24,7 @@ export class Cliente {
     public readonly genero: string | null,
     public readonly rol: RolCliente,
     public readonly estado: boolean,
-    public readonly sucursalId: number | null,
     public readonly fechaRegistro?: Date,
-    public readonly sucursal?: { id: number; nombre: string; tipo: string } | null,
+    public readonly grupos?: GrupoDeCliente[],
   ) {}
 }

@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
+import { UsuarioActivoCacheService } from './usuario-activo-cache.service';
 
 @Global()
 @Module({
@@ -11,7 +12,7 @@ import { RolesGuard } from './roles.guard';
       signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || '1d' },
     }),
   ],
-  providers: [JwtAuthGuard, RolesGuard],
-  exports: [JwtAuthGuard, RolesGuard, JwtModule],
+  providers: [JwtAuthGuard, RolesGuard, UsuarioActivoCacheService],
+  exports: [JwtAuthGuard, RolesGuard, JwtModule, UsuarioActivoCacheService],
 })
 export class SecurityModule {}

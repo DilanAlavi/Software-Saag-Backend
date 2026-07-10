@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { STOCK_REPOSITORY, StockRepository } from '../../domain/stock/stock.repository';
 import { GuardarStockDto } from './dto/guardar-stock.dto';
+import { ConfirmarStockDto } from './dto/confirmar-stock.dto';
 
 @Injectable()
 export class StockService {
@@ -16,7 +17,12 @@ export class StockService {
   guardar(dto: GuardarStockDto) {
     return this.stockRepository.guardar(dto.productoId, dto.sucursalId, {
       area: dto.area,
-      cantidad: dto.cantidad,
+      cajas: dto.cajas,
+      piezas: dto.piezas,
     });
+  }
+
+  confirmar(dto: ConfirmarStockDto) {
+    return this.stockRepository.confirmar(dto.productoId, dto.sucursalId, dto.cantidad);
   }
 }

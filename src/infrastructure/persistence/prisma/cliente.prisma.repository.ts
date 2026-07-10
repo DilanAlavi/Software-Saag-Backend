@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { ClienteFiltros, ClienteRepository } from '../../../domain/cliente/cliente.repository';
+import { ActualizarClienteInput, ClienteFiltros, ClienteRepository, CrearClienteInput } from '../../../domain/cliente/cliente.repository';
 import { HistorialEstado } from '../../../domain/usuario/usuario.repository';
 import { Cliente } from '../../../domain/cliente/cliente.entity';
 import { PrismaService } from './prisma.service';
+
+const INCLUIR_GRUPOS = {
+  gruposPrecioEspecial: { include: { grupo: true } },
+} as const;
 
 @Injectable()
 export class ClientePrismaRepository implements ClienteRepository {
@@ -19,12 +23,19 @@ export class ClientePrismaRepository implements ClienteRepository {
       c.genero,
       c.rol,
       c.estado,
-      c.sucursalId,
+      c.fechaRegistro,
+      c.gruposPrecioEspecial
+        ? c.gruposPrecioEspecial.map((g: any) => ({
+            id: g.grupo.id,
+            nombre: g.grupo.nombre,
+            categoriaAsignada: g.grupo.categoriaAsignada,
+          }))
+        : undefined,
     );
   }
 
   async findById(id: number): Promise<Cliente | null> {
-    const c = await this.prisma.cliente.findUnique({ where: { id } });
+    const c = await this.prisma.cliente.findUnique({ where: { id }, include: INCLUIR_GRUPOS });
     return c ? this.toEntity(c) : null;
   }
 
@@ -38,26 +49,56 @@ export class ClientePrismaRepository implements ClienteRepository {
         { nombre: { contains: filtros.search, mode: 'insensitive' } },
         { apellidoPaterno: { contains: filtros.search, mode: 'insensitive' } },
         { apellidoMaterno: { contains: filtros.search, mode: 'insensitive' } },
+        { ci: { contains: filtros.search, mode: 'insensitive' } },
+        { celular: { contains: filtros.search, mode: 'insensitive' } },
       ];
     }
 
     const rows = await this.prisma.cliente.findMany({
       where,
-      include: { sucursal: true },
+      include: INCLUIR_GRUPOS,
       orderBy: [{ nombre: 'asc' }, { apellidoPaterno: 'asc' }],
     });
 
-    return rows.map((c) => ({
-      ...this.toEntity(c),
-      sucursal: c.sucursal ? { id: c.sucursal.id, nombre: c.sucursal.nombre, tipo: c.sucursal.tipo } : null,
-      fechaRegistro: c.fechaRegistro,
-    })) as any;
+    return rows.map((c) => this.toEntity(c));
+  }
+
+  async crear(data: CrearClienteInput): Promise<Cliente> {
+    const c = await this.prisma.cliente.create({
+      data: {
+        nombre: data.nombre,
+        apellidoPaterno: data.apellidoPaterno,
+        apellidoMaterno: data.apellidoMaterno,
+        ci: data.ci,
+        celular: data.celular,
+        genero: data.genero,
+        rol: data.rol as any,
+      },
+    });
+    return this.toEntity(c);
+  }
+
+  async actualizar(id: number, data: ActualizarClienteInput): Promise<Cliente> {
+    const c = await this.prisma.cliente.update({
+      where: { id },
+      data: {
+        nombre: data.nombre,
+        apellidoPaterno: data.apellidoPaterno,
+        apellidoMaterno: data.apellidoMaterno,
+        ci: data.ci,
+        celular: data.celular,
+        genero: data.genero,
+        rol: data.rol as any,
+      },
+      include: INCLUIR_GRUPOS,
+    });
+    return this.toEntity(c);
   }
 
   async updateEstadoConHistorial(id: number, estadoNuevo: boolean, realizadoPorId: number): Promise<Cliente> {
     return this.prisma.$transaction(async (tx) => {
       const anterior = await tx.cliente.findUniqueOrThrow({ where: { id } });
-      const actualizado = await tx.cliente.update({ where: { id }, data: { estado: estadoNuevo } });
+      const actualizado = await tx.cliente.update({ where: { id }, data: { estado: estadoNuevo }, include: INCLUIR_GRUPOS });
       await tx.historialEstadoCliente.create({
         data: {
           clienteId: id,

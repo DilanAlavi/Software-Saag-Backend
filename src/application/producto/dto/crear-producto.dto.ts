@@ -1,4 +1,4 @@
-import { IsArray, IsIn, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class CrearProductoDto {
   @IsString()
@@ -19,4 +19,18 @@ export class CrearProductoDto {
   @IsOptional()
   @IsString()
   codigo?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  unidadesPorPaquete?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  unidadesPorCaja?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  ventaSoloPorPaquete?: boolean;
 }
