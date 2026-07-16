@@ -6,9 +6,12 @@
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
+    "start:dev:prod": "dotenv -e .env.production -- nest start --watch",
     "start:prod": "node dist/main",
+    "start:prod:prod": "dotenv -e .env.production -- node dist/main",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:prod": "dotenv -e .env.production -- prisma migrate deploy",
     "seed": "node scripts/seed.js"
   },
   "dependencies": {
@@ -33,6 +36,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.14.0",
     "@types/pdfkit": "^0.13.5",
+    "dotenv-cli": "^11.0.0",
     "prisma": "^5.20.0",
     "typescript": "^5.5.0"
   }

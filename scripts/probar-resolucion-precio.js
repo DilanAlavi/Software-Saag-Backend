@@ -119,5 +119,69 @@ r = resolverPrecioLinea({
 });
 check('Cliente no registrado = precio Standard1 por defecto (65)', r.precioUnitario === 65, r);
 
+// ---------- Casos nuevos: división proporcional por docena con redondeo comercial ----------
+// Aldaba: paquete/docena de 12, Mayor1 = 25 (precio de la docena), SIN precio pieza suelta cargado
+const aldaba = { nombre: 'Aldaba galvanizada', tipoProducto: 'FERRETERIA', unidadesPorPaquete: 12, ventaSoloPorPaquete: true };
+const precioAldaba = {
+  precioCosto: 10, menor1: 30, menor2: 28, mayor1: 25, mayor2: 24,
+  plomeria: 26, carpinteria: 26, electricista: 26,
+  precioPiezaSuelta: null, cantidadMinimaDescuentoMenor1: null, precioDescuentoMenor1: null,
+};
+
+// 3 piezas: 25/12*3 = 6.25 -> decimal .25 < .50 -> se deja tal cual (6.25 total, 2.0833.. por unidad)
+r = resolverPrecioLinea({
+  producto: aldaba, precio: precioAldaba, rolCliente: 'MAYOR_1',
+  modalidadVentaEfectiva: 'PIEZA', categoriaGrupoEspecial: null, cantidad: 3,
+});
+check(
+  'Aldaba 3u sin precio suelto: 25/12*3=6.25 (decimal<.50, no redondea)',
+  Math.abs(r.precioUnitario * 3 - 6.25) < 0.0001,
+  r,
+);
+
+// 6 piezas: 25/12*6 = 12.5 -> decimal .50 -> redondea para arriba a 13 (2.1666.. por unidad)
+r = resolverPrecioLinea({
+  producto: aldaba, precio: precioAldaba, rolCliente: 'MAYOR_1',
+  modalidadVentaEfectiva: 'PIEZA', categoriaGrupoEspecial: null, cantidad: 6,
+});
+check(
+  'Aldaba 6u sin precio suelto: 25/12*6=12.5 (decimal=.50, redondea a 13)',
+  Math.abs(r.precioUnitario * 6 - 13) < 0.0001,
+  r,
+);
+
+// 9 piezas: 25/12*9 = 18.75 -> decimal .75 -> redondea para arriba a 19
+r = resolverPrecioLinea({
+  producto: aldaba, precio: precioAldaba, rolCliente: 'MAYOR_1',
+  modalidadVentaEfectiva: 'PIEZA', categoriaGrupoEspecial: null, cantidad: 9,
+});
+check(
+  'Aldaba 9u sin precio suelto: 25/12*9=18.75 (decimal=.75, redondea a 19)',
+  Math.abs(r.precioUnitario * 9 - 19) < 0.0001,
+  r,
+);
+
+// Sucursal AMBOS, sin precio suelto cargado, cantidad no exacta (5) -> mismo cálculo proporcional
+r = resolverPrecioLinea({
+  producto: aldaba, precio: precioAldaba, rolCliente: 'MAYOR_1',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 5,
+});
+// 25/12*5 = 10.4166.. -> decimal .4166 < .50 -> se deja tal cual
+check(
+  'Aldaba AMBOS 5u (no exacto) sin precio suelto: se calcula proporcional igual (no revienta)',
+  Math.abs(r.precioUnitario * 5 - 25 / 12 * 5) < 0.0001,
+  r,
+);
+
+// Sucursal PAQUETE (solo paquete cerrado): 5u sigue rechazando, sin importar si hay precio suelto o no
+let errorPaquete = null;
+try {
+  resolverPrecioLinea({
+    producto: aldaba, precio: precioAldaba, rolCliente: 'MAYOR_1',
+    modalidadVentaEfectiva: 'PAQUETE', categoriaGrupoEspecial: null, cantidad: 5,
+  });
+} catch (e) { errorPaquete = e; }
+check('Aldaba en sucursal PAQUETE sigue rechazando cantidad no exacta (5u)', errorPaquete !== null, errorPaquete?.message);
+
 console.log(`\n${fallas === 0 ? 'TODO OK' : `${fallas} FALLA(S) ENCONTRADA(S)`}`);
 process.exit(fallas === 0 ? 0 : 1);

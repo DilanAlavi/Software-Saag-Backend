@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import {
   ActualizarProductoInput,
   CrearProductoInput,
@@ -30,23 +31,42 @@ export class ProductoPrismaRepository implements ProductoRepository {
   }
 
   async findAll(filtros: ProductoFiltros): Promise<Producto[]> {
-    const where: any = { estado: true };
-    if (filtros.tipoProducto) {
-      where.tipoProducto = filtros.tipoProducto;
-    }
-    if (filtros.search) {
-      where.OR = [
-        { nombre: { contains: filtros.search, mode: 'insensitive' } },
-        { marca: { contains: filtros.search, mode: 'insensitive' } },
-        { codigo: { contains: filtros.search, mode: 'insensitive' } },
-        { nombresAlternativos: { has: filtros.search } },
-      ];
+    // Sin búsqueda de texto: consulta normal de Prisma.
+    if (!filtros.search) {
+      const where: any = { estado: true };
+      if (filtros.tipoProducto) {
+        where.tipoProducto = filtros.tipoProducto;
+      }
+      const rows = await this.prisma.producto.findMany({ where, orderBy: { nombre: 'asc' } });
+      return rows.map((p) => this.toEntity(p));
     }
 
-    const rows = await this.prisma.producto.findMany({
-      where,
-      orderBy: { nombre: 'asc' },
+    // Con búsqueda: se separa en palabras sueltas. Un producto aparece si TODAS las palabras
+    // están en algún lado (nombre, marca, código o nombres alternativos), sin importar el orden
+    // ni mayúsculas/minúsculas, y sin exigir que estén pegadas (ej. "cinta 15" encuentra
+    // "Cinta de goteo 15 cm").
+    const palabras = filtros.search.trim().split(/\s+/).filter(Boolean);
+    const condicionesPorPalabra = palabras.map((palabra) => {
+      const comodin = `%${palabra}%`;
+      return Prisma.sql`(
+        "nombre" ILIKE ${comodin} OR
+        "marca" ILIKE ${comodin} OR
+        "codigo" ILIKE ${comodin} OR
+        EXISTS (SELECT 1 FROM unnest("nombresAlternativos") AS alt WHERE alt ILIKE ${comodin})
+      )`;
     });
+
+    const condicionTipo = filtros.tipoProducto
+      ? Prisma.sql`AND "tipoProducto" = ${filtros.tipoProducto}::"TipoProducto"`
+      : Prisma.empty;
+
+    const rows = await this.prisma.$queryRaw<any[]>`
+      SELECT * FROM "Producto"
+      WHERE "estado" = true
+      ${condicionTipo}
+      AND ${Prisma.join(condicionesPorPalabra, ' AND ')}
+      ORDER BY "nombre" ASC
+    `;
     return rows.map((p) => this.toEntity(p));
   }
 

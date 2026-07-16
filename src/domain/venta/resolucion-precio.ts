@@ -106,6 +106,33 @@ function precioPorPaquete(
   return (precioCategoria * totalPaquetes) / cantidad;
 }
 
+/**
+ * Redondeo comercial: si los centavos dan 0.50 o más, sube al boliviano completo.
+ * Si dan menos de 0.50, se deja el valor tal cual (con centavos, sin redondear).
+ */
+function redondeoComercial(valorTotal: number): number {
+  const entero = Math.floor(valorTotal);
+  const decimal = valorTotal - entero;
+  return decimal >= 0.5 ? entero + 1 : valorTotal;
+}
+
+/**
+ * Cuando se vende una cantidad parcial de un producto por paquete/docena y NO hay un
+ * "precio pieza suelta" fijo cargado, se divide proporcionalmente el precio del paquete
+ * completo entre las unidades pedidas, aplicando el redondeo comercial sobre el total.
+ */
+function precioProporcionalConRedondeo(
+  precio: PrecioParaResolucion,
+  categoria: string,
+  unidadesPorPaquete: number,
+  cantidad: number,
+): number {
+  const precioCategoria = precioConDescuentoVolumen(precio, categoria, cantidad);
+  const totalSinRedondear = (precioCategoria / unidadesPorPaquete) * cantidad;
+  const totalRedondeado = redondeoComercial(totalSinRedondear);
+  return totalRedondeado / cantidad;
+}
+
 export function resolverPrecioLinea(input: ResolverPrecioInput): ResultadoPrecio {
   const { producto, precio, rolCliente, modalidadVentaEfectiva, categoriaGrupoEspecial, cantidad } = input;
 
@@ -154,12 +181,16 @@ export function resolverPrecioLinea(input: ResolverPrecioInput): ResultadoPrecio
 
   const categoriaCliente = categoriaEfectivaDelCliente(rolCliente, producto.tipoProducto);
 
-  // 2. La sucursal solo vende suelto: siempre precio de pieza suelta, sin importar la cantidad
+  // 2. La sucursal solo vende suelto: precio de pieza suelta si está fijado; si no, se divide
+  // proporcionalmente el precio del paquete con el redondeo comercial.
   if (modalidadVentaEfectiva === 'PIEZA') {
-    if (precio.precioPiezaSuelta === null) {
-      throw new Error(`"${producto.nombre}" no tiene definido un precio de pieza suelta`);
+    if (precio.precioPiezaSuelta !== null) {
+      return { precioUnitario: precio.precioPiezaSuelta, categoriaUsada: 'PIEZA_SUELTA' };
     }
-    return { precioUnitario: precio.precioPiezaSuelta, categoriaUsada: 'PIEZA_SUELTA' };
+    return {
+      precioUnitario: precioProporcionalConRedondeo(precio, categoriaCliente, unidadesPorPaquete, cantidad),
+      categoriaUsada: categoriaCliente,
+    };
   }
 
   // 3. La sucursal solo vende por paquete cerrado
@@ -183,8 +214,11 @@ export function resolverPrecioLinea(input: ResolverPrecioInput): ResultadoPrecio
     };
   }
 
-  if (precio.precioPiezaSuelta === null) {
-    throw new Error(`"${producto.nombre}" no tiene definido un precio de pieza suelta`);
+  if (precio.precioPiezaSuelta !== null) {
+    return { precioUnitario: precio.precioPiezaSuelta, categoriaUsada: 'PIEZA_SUELTA' };
   }
-  return { precioUnitario: precio.precioPiezaSuelta, categoriaUsada: 'PIEZA_SUELTA' };
+  return {
+    precioUnitario: precioProporcionalConRedondeo(precio, categoriaCliente, unidadesPorPaquete, cantidad),
+    categoriaUsada: categoriaCliente,
+  };
 }

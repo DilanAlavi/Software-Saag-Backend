@@ -14,6 +14,8 @@ import { VentaModule } from './infrastructure/http/venta/venta.module';
 
 @Module({
   imports: [
+    // Qué archivo .env se usa lo decide el comando de npm que se corre (ver package.json:
+    // "start:dev" = staging, "start:dev:prod" = producción), no una variable a mano.
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     SecurityModule,
