@@ -33,4 +33,8 @@ export class CrearProductoDto {
   @IsOptional()
   @IsBoolean()
   ventaSoloPorPaquete?: boolean;
+
+  @IsOptional()
+  @IsString()
+  unidadVenta?: string;
 }
