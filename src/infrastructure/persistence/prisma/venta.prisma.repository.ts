@@ -221,6 +221,9 @@ export class VentaPrismaRepository implements VentaRepository {
       const fin = new Date(`${filtros.fecha}T23:59:59.999`);
       where.fecha = { gte: inicio, lte: fin };
     }
+    if (filtros.desde) {
+      where.fecha = { gte: new Date(`${filtros.desde}T00:00:00`) };
+    }
     if (filtros.search) {
       where.cliente = {
         OR: [

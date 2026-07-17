@@ -13,6 +13,12 @@ interface UsuarioActual {
   sucursalId: number | null;
 }
 
+function haceDias(dias: number): string {
+  const fecha = new Date();
+  fecha.setDate(fecha.getDate() - dias);
+  return fecha.toISOString().slice(0, 10);
+}
+
 @Injectable()
 export class VentaService {
   constructor(
@@ -65,6 +71,33 @@ export class VentaService {
 
   listar(filtros: VentaFiltros) {
     return this.ventaRepository.listar(filtros);
+  }
+
+  async deudas(usuarioActual: UsuarioActual, search?: string) {
+    const sucursalId = usuarioActual.rol === 'ADMIN' ? undefined : (usuarioActual.sucursalId ?? undefined);
+
+    // Sin búsqueda: solo se traen los últimos 30 días (para no arrastrar deudas viejas sin límite).
+    // Buscando por nombre/CI/celular, se busca en todo el historial de pendientes, sin ese límite.
+    const desde = search ? undefined : haceDias(30);
+
+    const { ventas } = await this.ventaRepository.listar({
+      estado: 'PENDIENTE',
+      sucursalId,
+      desde,
+      search,
+    });
+
+    const hoyStr = new Date().toISOString().slice(0, 10);
+    const hoy = ventas.filter((v) => new Date(v.fecha).toISOString().slice(0, 10) === hoyStr);
+    const delMes = ventas.filter((v) => new Date(v.fecha).toISOString().slice(0, 10) !== hoyStr);
+    const sumar = (lista: typeof ventas) => lista.reduce((acc, v) => acc + v.total, 0);
+
+    return {
+      hoy,
+      delMes,
+      montoHoy: sumar(hoy),
+      montoDelMes: sumar(delMes),
+    };
   }
 
   async obtener(id: number) {
