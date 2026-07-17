@@ -42,4 +42,12 @@ export class CrearProductoDto {
   @IsInt()
   @Min(1)
   unidadVentaTamano?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  redondeoSiempreArriba?: boolean;
+
+  @IsOptional()
+  @IsString()
+  notaVenta?: string;
 }

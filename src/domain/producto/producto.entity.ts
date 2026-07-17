@@ -15,5 +15,7 @@ export class Producto {
     public readonly ventaSoloPorPaquete: boolean,
     public readonly unidadVenta: string | null,
     public readonly unidadVentaTamano: number | null,
+    public readonly redondeoSiempreArriba: boolean,
+    public readonly notaVenta: string | null,
   ) {}
 }

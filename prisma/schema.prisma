@@ -61,6 +61,11 @@ model Producto {
   // Cuantas piezas hace 1 unidad de venta (ej. 2 para "par"). Puede ser distinto de
   // unidadesPorPaquete (ej. una bisagra se vende por par de 2, pero el paquete comercial trae 24).
   unidadVentaTamano   Int?
+  // Si es true, cualquier division/proporcion de precio de este producto redondea siempre
+  // hacia arriba al boliviano entero (sin dejar centavos), sin importar el decimal.
+  redondeoSiempreArriba Boolean @default(false)
+  // Aviso libre para mostrar en pantalla al elegir el producto (ej. "Se vende de 3 en 3").
+  notaVenta           String?
 
   historial HistorialProducto[]
   precio    Precio?

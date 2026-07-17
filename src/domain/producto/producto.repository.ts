@@ -19,6 +19,8 @@ export interface CrearProductoInput {
   ventaSoloPorPaquete?: boolean;
   unidadVenta?: string;
   unidadVentaTamano?: number;
+  redondeoSiempreArriba?: boolean;
+  notaVenta?: string;
 }
 
 export interface HistorialProductoRegistro {
@@ -39,6 +41,8 @@ export interface ActualizarProductoInput {
   ventaSoloPorPaquete?: boolean;
   unidadVenta?: string;
   unidadVentaTamano?: number;
+  redondeoSiempreArriba?: boolean;
+  notaVenta?: string;
 }
 
 export interface ProductoRepository {

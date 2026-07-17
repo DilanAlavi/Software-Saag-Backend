@@ -12,6 +12,12 @@ export interface ProductoParaPrecio {
    * único precio de paquete completo en cuanto la cantidad llega a la de un paquete.
    */
   unidadVentaTamano: number | null;
+  /**
+   * Si es true, cualquier división/proporción de precio en este producto SIEMPRE redondea
+   * hacia arriba al boliviano entero (sin dejar centavos), sin importar qué tan chico sea el
+   * decimal. Es distinto del redondeo comercial normal (que solo sube a partir de 0.50).
+   */
+  redondeoSiempreArriba: boolean;
 }
 
 export interface PrecioParaResolucion {
@@ -163,10 +169,13 @@ function precioPorPaquete(
   categoria: string,
   unidadesPorPaquete: number,
   cantidad: number,
+  redondeoSiempreArriba: boolean = false,
 ): number {
   const totalPaquetes = cantidad / unidadesPorPaquete;
   const precioCategoria = precioConDescuentoVolumen(precio, categoria, cantidad);
-  return (precioCategoria * totalPaquetes) / cantidad;
+  const totalSinRedondear = precioCategoria * totalPaquetes;
+  const total = redondeoSiempreArriba ? redondearSiempreArriba(totalSinRedondear) : totalSinRedondear;
+  return total / cantidad;
 }
 
 /**
@@ -180,19 +189,31 @@ function redondeoComercial(valorTotal: number): number {
 }
 
 /**
+ * Redondeo "siempre arriba": para productos donde no se quiere dejar NINGÚN centavo, sin
+ * importar qué tan chico sea el decimal (a diferencia del redondeo comercial, que solo
+ * sube a partir de 0.50). Ej. 13.33 -> 14, 17.50 -> 18, 35.00 -> 35 (ya es entero, no cambia).
+ */
+function redondearSiempreArriba(valorTotal: number): number {
+  const redondeado = Math.round(valorTotal * 100) / 100; // limpia ruido de punto flotante
+  return Number.isInteger(redondeado) ? redondeado : Math.ceil(redondeado);
+}
+
+/**
  * Cuando se vende una cantidad parcial de un producto por paquete/docena y NO hay un
  * "precio pieza suelta" fijo cargado, se divide proporcionalmente el precio del paquete
- * completo entre las unidades pedidas, aplicando el redondeo comercial sobre el total.
+ * completo entre las unidades pedidas, aplicando el redondeo (comercial o siempre-arriba,
+ * según el producto) sobre el total.
  */
 function precioProporcionalConRedondeo(
   precio: PrecioParaResolucion,
   categoria: string,
   unidadesPorPaquete: number,
   cantidad: number,
+  redondeoSiempreArriba: boolean = false,
 ): number {
   const precioCategoria = precioConDescuentoVolumen(precio, categoria, cantidad);
   const totalSinRedondear = (precioCategoria / unidadesPorPaquete) * cantidad;
-  const totalRedondeado = redondeoComercial(totalSinRedondear);
+  const totalRedondeado = redondeoSiempreArriba ? redondearSiempreArriba(totalSinRedondear) : redondeoComercial(totalSinRedondear);
   return totalRedondeado / cantidad;
 }
 
@@ -237,7 +258,7 @@ export function resolverPrecioLinea(input: ResolverPrecioInput): ResultadoPrecio
       );
     }
     return {
-      precioUnitario: precioPorPaquete(precio, categoriaGrupoEspecial, unidadesPorPaquete, cantidad),
+      precioUnitario: precioPorPaquete(precio, categoriaGrupoEspecial, unidadesPorPaquete, cantidad, producto.redondeoSiempreArriba),
       categoriaUsada: categoriaGrupoEspecial,
     };
   }
@@ -272,7 +293,7 @@ export function resolverPrecioLinea(input: ResolverPrecioInput): ResultadoPrecio
       return { precioUnitario: precio.precioPiezaSuelta, categoriaUsada: 'PIEZA_SUELTA' };
     }
     return {
-      precioUnitario: precioProporcionalConRedondeo(precio, categoriaCliente, unidadesPorPaquete, cantidad),
+      precioUnitario: precioProporcionalConRedondeo(precio, categoriaCliente, unidadesPorPaquete, cantidad, producto.redondeoSiempreArriba),
       categoriaUsada: categoriaCliente,
     };
   }
@@ -285,7 +306,7 @@ export function resolverPrecioLinea(input: ResolverPrecioInput): ResultadoPrecio
       );
     }
     return {
-      precioUnitario: precioPorPaquete(precio, categoriaCliente, unidadesPorPaquete, cantidad),
+      precioUnitario: precioPorPaquete(precio, categoriaCliente, unidadesPorPaquete, cantidad, producto.redondeoSiempreArriba),
       categoriaUsada: categoriaCliente,
     };
   }
@@ -293,7 +314,7 @@ export function resolverPrecioLinea(input: ResolverPrecioInput): ResultadoPrecio
   // 4. La sucursal vende ambos: paquete completo si calza exacto, si no, pieza suelta
   if (esPaqueteCompleto) {
     return {
-      precioUnitario: precioPorPaquete(precio, categoriaCliente, unidadesPorPaquete, cantidad),
+      precioUnitario: precioPorPaquete(precio, categoriaCliente, unidadesPorPaquete, cantidad, producto.redondeoSiempreArriba),
       categoriaUsada: categoriaCliente,
     };
   }
@@ -309,7 +330,7 @@ export function resolverPrecioLinea(input: ResolverPrecioInput): ResultadoPrecio
     return { precioUnitario: precio.precioPiezaSuelta, categoriaUsada: 'PIEZA_SUELTA' };
   }
   return {
-    precioUnitario: precioProporcionalConRedondeo(precio, categoriaCliente, unidadesPorPaquete, cantidad),
+    precioUnitario: precioProporcionalConRedondeo(precio, categoriaCliente, unidadesPorPaquete, cantidad, producto.redondeoSiempreArriba),
     categoriaUsada: categoriaCliente,
   };
 }

@@ -11,7 +11,7 @@ function check(nombre, cond, detalle) {
 }
 
 // Producto Disco Flap: paquete de 10, precio de categoría = precio del PAQUETE (ventaSoloPorPaquete=true)
-const discoFlap = { nombre: 'Disco Flap 4.5"', tipoProducto: 'FERRETERIA', unidadesPorPaquete: 10, unidadesPorCaja: null, ventaSoloPorPaquete: true, unidadVentaTamano: null };
+const discoFlap = { nombre: 'Disco Flap 4.5"', tipoProducto: 'FERRETERIA', unidadesPorPaquete: 10, unidadesPorCaja: null, ventaSoloPorPaquete: true, unidadVentaTamano: null, redondeoSiempreArriba: false };
 const precioDisco = {
   precioCosto: 6, menor1: 9, menor2: 8.5, mayor1: 7.5, mayor2: 7,
   plomeria: 8, carpinteria: 8, electricista: 8,
@@ -58,7 +58,7 @@ r = resolverPrecioLinea({
 check('Sucursal AMBOS con 7u (no exacto) = precio pieza suelta (1.00)', r.precioUnitario === 1, r);
 
 // Caso 6: Grupo de Precio Especial (Mayor2) sobre producto de Cintas (sin paquete)
-const cinta = { nombre: 'Cinta de goteo', tipoProducto: 'PLOMERIA', unidadesPorPaquete: null, unidadesPorCaja: null, ventaSoloPorPaquete: false, unidadVentaTamano: null };
+const cinta = { nombre: 'Cinta de goteo', tipoProducto: 'PLOMERIA', unidadesPorPaquete: null, unidadesPorCaja: null, ventaSoloPorPaquete: false, unidadVentaTamano: null, redondeoSiempreArriba: false };
 const precioCinta = {
   precioCosto: 60, menor1: 90, menor2: 85, mayor1: 75, mayor2: 70,
   plomeria: 80, carpinteria: 90, electricista: 90,
@@ -71,7 +71,7 @@ r = resolverPrecioLinea({
 check('Cliente Standard1 con grupo especial Mayor2 en Cintas = precio Mayor2 (70)', r.precioUnitario === 70, r);
 
 // Caso 7: mismo cliente comprando OTRO producto sin grupo especial = su precio normal Standard1
-const martillo = { nombre: 'Martillo', tipoProducto: 'FERRETERIA', unidadesPorPaquete: null, unidadesPorCaja: 20, ventaSoloPorPaquete: false, unidadVentaTamano: null };
+const martillo = { nombre: 'Martillo', tipoProducto: 'FERRETERIA', unidadesPorPaquete: null, unidadesPorCaja: 20, ventaSoloPorPaquete: false, unidadVentaTamano: null, redondeoSiempreArriba: false };
 const precioMartillo = {
   precioCosto: 45.5, menor1: 65, menor2: 60, mayor1: 55, mayor2: 52,
   plomeria: 58, carpinteria: 58, electricista: 58,
@@ -121,7 +121,7 @@ check('Cliente no registrado = precio Standard1 por defecto (65)', r.precioUnita
 
 // ---------- Casos nuevos: división proporcional por docena con redondeo comercial ----------
 // Aldaba: paquete/docena de 12, Mayor1 = 25 (precio de la docena), SIN precio pieza suelta cargado
-const aldaba = { nombre: 'Aldaba galvanizada', tipoProducto: 'FERRETERIA', unidadesPorPaquete: 12, unidadesPorCaja: null, ventaSoloPorPaquete: true, unidadVentaTamano: null };
+const aldaba = { nombre: 'Aldaba galvanizada', tipoProducto: 'FERRETERIA', unidadesPorPaquete: 12, unidadesPorCaja: null, ventaSoloPorPaquete: true, unidadVentaTamano: null, redondeoSiempreArriba: false };
 const precioAldaba = {
   precioCosto: 10, menor1: 30, menor2: 28, mayor1: 25, mayor2: 24,
   plomeria: 26, carpinteria: 26, electricista: 26,
@@ -242,7 +242,7 @@ check('Producto sin precioCaja: Mayor2 con cantidad alta sigue con su precio nor
 // Carpinteria=9 (precio plano por par, siempre).
 const bisagraDorada = {
   nombre: 'Bisagra 4" dorado', tipoProducto: 'CARPINTERIA',
-  unidadesPorPaquete: 24, unidadesPorCaja: 72, ventaSoloPorPaquete: true, unidadVentaTamano: 2,
+  unidadesPorPaquete: 24, unidadesPorCaja: 72, ventaSoloPorPaquete: true, unidadVentaTamano: 2, redondeoSiempreArriba: false,
 };
 const precioBisagraDorada = {
   precioCosto: 100, menor1: 115, menor2: 115, mayor1: 105, mayor2: 105,
@@ -306,7 +306,7 @@ check('Producto sin unidadVentaTamano: Carpintero sigue el comportamiento anteri
 // precioCaja=4.6 (mas barato, se activa solo al llegar a la cantidad de caja completa)
 const bisagraNormal = {
   nombre: 'Bisagra bispot semicodo normal', tipoProducto: 'CARPINTERIA',
-  unidadesPorPaquete: 2, unidadesPorCaja: 100, ventaSoloPorPaquete: true, unidadVentaTamano: 2,
+  unidadesPorPaquete: 2, unidadesPorCaja: 100, ventaSoloPorPaquete: true, unidadVentaTamano: 2, redondeoSiempreArriba: false,
 };
 const precioBisagraNormal = {
   precioCosto: 3.8, menor1: 6, menor2: 5.5, mayor1: 4.8, mayor2: 4.8,
@@ -344,6 +344,61 @@ r = resolverPrecioLinea({
   modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 100,
 });
 check('Producto sin precioCaja: Carpintero con 50 pares sigue con precio plano normal (10 el par)', Math.abs(r.precioUnitario * 2 - 10) < 0.0001, r);
+
+// ---------- Caso nuevo: redondeoSiempreArriba (Grasa: caja de 24, se vende de 3 en 3) ----------
+// Mayor 1/2 = 140 (precio de la caja de 24 completa). Menor1/2/Carpinteria/Plomeria/Electricista
+// = 160 (mismo precio para "todos los demas"). Nunca se vende por pieza suelta (sin precioPiezaSuelta).
+const grasa = {
+  nombre: 'Grasa', tipoProducto: 'FERRETERIA',
+  unidadesPorPaquete: 24, unidadesPorCaja: 24, ventaSoloPorPaquete: true, unidadVentaTamano: null, redondeoSiempreArriba: true,
+};
+const precioGrasa = {
+  precioCosto: 135, menor1: 160, menor2: 160, mayor1: 140, mayor2: 140,
+  plomeria: 160, carpinteria: 160, electricista: 160,
+  precioCaja: null, precioPiezaSuelta: null, cantidadMinimaDescuentoMenor1: null, precioDescuentoMenor1: null,
+};
+
+// Caso 31: Mayor por 3 piezas (140/24*3=17.5) -> redondea SIEMPRE arriba a 18 (no importa que sea <0.50)
+r = resolverPrecioLinea({
+  producto: grasa, precio: precioGrasa, rolCliente: 'MAYOR_1',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 3,
+});
+check('Grasa Mayor1 3u: 140/24*3=17.5 -> redondeoSiempreArriba sube a 18', Math.abs(r.precioUnitario * 3 - 18) < 0.0001, r);
+
+// Caso 32: Mayor por 6 piezas (140/24*6=35 exacto) -> se queda en 35, no cambia
+r = resolverPrecioLinea({
+  producto: grasa, precio: precioGrasa, rolCliente: 'MAYOR_1',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 6,
+});
+check('Grasa Mayor1 6u: 140/24*6=35 (exacto, no cambia)', Math.abs(r.precioUnitario * 6 - 35) < 0.0001, r);
+
+// Caso 33: Mayor caja completa (24u) = 140 exacto
+r = resolverPrecioLinea({
+  producto: grasa, precio: precioGrasa, rolCliente: 'MAYOR_1',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 24,
+});
+check('Grasa Mayor1 caja completa (24u) = 140', Math.abs(r.precioUnitario * 24 - 140) < 0.0001, r);
+
+// Caso 34: Standard1 (random) por 3 piezas (160/24*3=20 exacto) = 20
+r = resolverPrecioLinea({
+  producto: grasa, precio: precioGrasa, rolCliente: 'STANDARD_1',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 3,
+});
+check('Grasa Standard1 3u: 160/24*3=20 (exacto)', Math.abs(r.precioUnitario * 3 - 20) < 0.0001, r);
+
+// Caso 35: Carpintero (rubro no coincide, cae a Standard2) por 9 piezas (160/24*9=60 exacto) = 60
+r = resolverPrecioLinea({
+  producto: grasa, precio: precioGrasa, rolCliente: 'CARPINTERIA',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 9,
+});
+check('Grasa Carpintero (fuera de rubro, Standard2) 9u: 160/24*9=60 (exacto)', Math.abs(r.precioUnitario * 9 - 60) < 0.0001, r);
+
+// Caso 36: producto normal (Aldaba, redondeoSiempreArriba=false por defecto) sigue con el redondeo comercial de siempre
+r = resolverPrecioLinea({
+  producto: aldaba, precio: precioAldaba, rolCliente: 'MAYOR_1',
+  modalidadVentaEfectiva: 'PIEZA', categoriaGrupoEspecial: null, cantidad: 3,
+});
+check('Producto normal (Aldaba) sin redondeoSiempreArriba sigue con redondeo comercial (6.25 sin redondear)', Math.abs(r.precioUnitario * 3 - 6.25) < 0.0001, r);
 
 console.log(`\n${fallas === 0 ? 'TODO OK' : `${fallas} FALLA(S) ENCONTRADA(S)`}`);
 process.exit(fallas === 0 ? 0 : 1);
