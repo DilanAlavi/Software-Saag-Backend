@@ -49,6 +49,7 @@ export class VentaController {
     @Query('sucursalId') sucursalId?: string,
     @Query('fecha') fecha?: string,
     @Query('search') search?: string,
+    @Query('searchTipo') searchTipo?: 'cliente' | 'vendedor',
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
@@ -57,6 +58,7 @@ export class VentaController {
       sucursalId: sucursalId ? Number(sucursalId) : undefined,
       fecha,
       search,
+      searchTipo,
       page: page ? Number(page) : undefined,
       pageSize: pageSize ? Number(pageSize) : undefined,
     });
