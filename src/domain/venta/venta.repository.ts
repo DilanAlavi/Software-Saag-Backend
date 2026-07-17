@@ -40,7 +40,8 @@ export interface VentaFiltros {
   sucursalId?: number;
   fecha?: string; // YYYY-MM-DD, filtra a ese día exacto
   desde?: string; // YYYY-MM-DD, filtra desde esa fecha en adelante
-  search?: string; // busca por nombre del cliente
+  search?: string; // busca por nombre del cliente o del vendedor, según searchTipo
+  searchTipo?: 'cliente' | 'vendedor';
   page?: number;
   pageSize?: number;
 }

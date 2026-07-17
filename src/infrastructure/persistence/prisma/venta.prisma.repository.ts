@@ -228,15 +228,26 @@ export class VentaPrismaRepository implements VentaRepository {
       where.fecha = { gte: new Date(`${filtros.desde}T00:00:00`) };
     }
     if (filtros.search) {
-      where.cliente = {
-        OR: [
-          { nombre: { contains: filtros.search, mode: 'insensitive' } },
-          { apellidoPaterno: { contains: filtros.search, mode: 'insensitive' } },
-          { apellidoMaterno: { contains: filtros.search, mode: 'insensitive' } },
-          { ci: { contains: filtros.search, mode: 'insensitive' } },
-          { celular: { contains: filtros.search, mode: 'insensitive' } },
-        ],
-      };
+      if (filtros.searchTipo === 'vendedor') {
+        where.usuario = {
+          OR: [
+            { nombre: { contains: filtros.search, mode: 'insensitive' } },
+            { apellidoPaterno: { contains: filtros.search, mode: 'insensitive' } },
+            { apellidoMaterno: { contains: filtros.search, mode: 'insensitive' } },
+            { username: { contains: filtros.search, mode: 'insensitive' } },
+          ],
+        };
+      } else {
+        where.cliente = {
+          OR: [
+            { nombre: { contains: filtros.search, mode: 'insensitive' } },
+            { apellidoPaterno: { contains: filtros.search, mode: 'insensitive' } },
+            { apellidoMaterno: { contains: filtros.search, mode: 'insensitive' } },
+            { ci: { contains: filtros.search, mode: 'insensitive' } },
+            { celular: { contains: filtros.search, mode: 'insensitive' } },
+          ],
+        };
+      }
     }
 
     const paginar = Boolean(filtros.page && filtros.pageSize);
