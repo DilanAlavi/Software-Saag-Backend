@@ -45,7 +45,15 @@ export class GananciaPrismaRepository implements GananciaRepository {
 
   private toVentaConGanancia(v: any): VentaConGanancia {
     const detalles = v.detalles.map((d: any) => {
-      const costoUnitario = d.producto?.precio ? Number(d.producto.precio.precioCosto) : 0;
+      const precioCosto = d.producto?.precio ? Number(d.producto.precio.precioCosto) : 0;
+      // Cuando el producto se vende solo por paquete, "precioCosto" es el costo del PAQUETE
+      // completo (ej. la caja de 24), no el de una pieza suelta — hay que dividirlo entre las
+      // unidades del paquete para tener el costo real por pieza antes de multiplicar por la
+      // cantidad vendida (que siempre viene en piezas sueltas reales).
+      const costoUnitario =
+        d.producto?.ventaSoloPorPaquete && d.producto?.unidadesPorPaquete
+          ? precioCosto / d.producto.unidadesPorPaquete
+          : precioCosto;
       const total = Number(d.total);
       const ganancia = total - costoUnitario * d.cantidad;
       return {
