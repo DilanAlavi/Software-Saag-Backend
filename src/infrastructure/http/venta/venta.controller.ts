@@ -64,6 +64,12 @@ export class VentaController {
     });
   }
 
+  @Get('deudas')
+  @Roles('ADMIN', 'ADMIN_SUCURSAL', 'VENDEDOR')
+  deudas(@Req() req: any, @Query('search') search?: string) {
+    return this.ventaService.deudas(req.user, search);
+  }
+
   @Get(':id')
   @Roles('ADMIN', 'ADMIN_SUCURSAL', 'VENDEDOR')
   obtener(@Param('id') id: string) {

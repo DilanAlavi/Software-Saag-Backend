@@ -2,6 +2,7 @@ export interface ProductoParaPrecio {
   nombre: string;
   tipoProducto: string;
   unidadesPorPaquete: number | null;
+  unidadesPorCaja: number | null;
   /** Si es true, los precios de categoría representan el precio del PAQUETE, no de la pieza. */
   ventaSoloPorPaquete: boolean;
 }
@@ -15,10 +16,19 @@ export interface PrecioParaResolucion {
   plomeria: number;
   carpinteria: number;
   electricista: number;
+  precioCaja: number | null;
   precioPiezaSuelta: number | null;
   cantidadMinimaDescuentoMenor1: number | null;
   precioDescuentoMenor1: number | null;
 }
+
+/**
+ * Categorías que pueden acceder al "precio de caja" (más barato que su precio normal de rol),
+ * cuando el producto tiene ese precio cargado. Standard 1 y Standard 2 quedan afuera a propósito:
+ * Standard 1 tiene su propio mecanismo de descuento por cantidad mínima (aparte), y Standard 2
+ * nunca entra en precio de caja.
+ */
+const CATEGORIAS_CON_PRECIO_CAJA = ['MAYOR_1', 'MAYOR_2', 'CARPINTERIA', 'PLOMERIA', 'ELECTRICISTA'];
 
 export type ModalidadVenta = 'PIEZA' | 'PAQUETE' | 'AMBOS';
 
@@ -67,8 +77,16 @@ function categoriaEfectivaDelCliente(rolCliente: string | null, tipoProducto: st
   return categoria;
 }
 
-function precioConDescuentoVolumen(precio: PrecioParaResolucion, categoria: string, cantidad: number): number {
+function precioConDescuentoVolumen(
+  precio: PrecioParaResolucion,
+  categoria: string,
+  cantidad: number,
+  unidadesPorCaja: number | null = null,
+  esGrupoEspecial: boolean = false,
+): number {
   const base = obtenerPrecioCategoria(precio, categoria);
+
+  // Standard 1: descuento manual configurado aparte (cantidad mínima propia + precio propio).
   if (
     categoria === 'STANDARD_1' &&
     precio.cantidadMinimaDescuentoMenor1 !== null &&
@@ -77,6 +95,17 @@ function precioConDescuentoVolumen(precio: PrecioParaResolucion, categoria: stri
   ) {
     return precio.precioDescuentoMenor1;
   }
+
+  // Precio de caja: para Mayor1/Mayor2/Carpintero/Plomero/Electricista, si el producto tiene
+  // precioCaja cargado. Un cliente de Grupo de Precio Especial lo obtiene siempre (para eso
+  // existe el grupo); el resto solo si la cantidad llega a la de una caja completa.
+  if (CATEGORIAS_CON_PRECIO_CAJA.includes(categoria) && precio.precioCaja !== null) {
+    const llegaACaja = unidadesPorCaja !== null && cantidad >= unidadesPorCaja;
+    if (esGrupoEspecial || llegaACaja) {
+      return precio.precioCaja;
+    }
+  }
+
   return base;
 }
 
@@ -150,13 +179,13 @@ export function resolverPrecioLinea(input: ResolverPrecioInput): ResultadoPrecio
     // 1. Grupo de Precio Especial
     if (categoriaGrupoEspecial) {
       return {
-        precioUnitario: precioConDescuentoVolumen(precio, categoriaGrupoEspecial, cantidad),
+        precioUnitario: precioConDescuentoVolumen(precio, categoriaGrupoEspecial, cantidad, producto.unidadesPorCaja, true),
         categoriaUsada: categoriaGrupoEspecial,
       };
     }
     const categoriaCliente = categoriaEfectivaDelCliente(rolCliente, producto.tipoProducto);
     return {
-      precioUnitario: precioConDescuentoVolumen(precio, categoriaCliente, cantidad),
+      precioUnitario: precioConDescuentoVolumen(precio, categoriaCliente, cantidad, producto.unidadesPorCaja, false),
       categoriaUsada: categoriaCliente,
     };
   }

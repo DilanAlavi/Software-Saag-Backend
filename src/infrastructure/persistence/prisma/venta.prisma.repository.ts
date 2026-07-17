@@ -88,6 +88,7 @@ export class VentaPrismaRepository implements VentaRepository {
         nombre: producto.nombre,
         tipoProducto: producto.tipoProducto,
         unidadesPorPaquete: producto.unidadesPorPaquete,
+        unidadesPorCaja: producto.unidadesPorCaja,
         ventaSoloPorPaquete: producto.ventaSoloPorPaquete,
       },
       precio: {
@@ -99,6 +100,7 @@ export class VentaPrismaRepository implements VentaRepository {
         plomeria: Number(producto.precio.plomeria),
         carpinteria: Number(producto.precio.carpinteria),
         electricista: Number(producto.precio.electricista),
+        precioCaja: producto.precio.precioCaja !== null ? Number(producto.precio.precioCaja) : null,
         precioPiezaSuelta: producto.precio.precioPiezaSuelta !== null ? Number(producto.precio.precioPiezaSuelta) : null,
         cantidadMinimaDescuentoMenor1: producto.precio.cantidadMinimaDescuentoMenor1,
         precioDescuentoMenor1:
@@ -220,6 +222,9 @@ export class VentaPrismaRepository implements VentaRepository {
       const inicio = new Date(`${filtros.fecha}T00:00:00`);
       const fin = new Date(`${filtros.fecha}T23:59:59.999`);
       where.fecha = { gte: inicio, lte: fin };
+    }
+    if (filtros.desde) {
+      where.fecha = { gte: new Date(`${filtros.desde}T00:00:00`) };
     }
     if (filtros.search) {
       if (filtros.searchTipo === 'vendedor') {
