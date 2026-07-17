@@ -11,6 +11,7 @@ import { PrecioModule } from './infrastructure/http/precio/precio.module';
 import { StockModule } from './infrastructure/http/stock/stock.module';
 import { GrupoPrecioEspecialModule } from './infrastructure/http/grupo-precio-especial/grupo-precio-especial.module';
 import { VentaModule } from './infrastructure/http/venta/venta.module';
+import { GananciaModule } from './infrastructure/http/ganancia/ganancia.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { VentaModule } from './infrastructure/http/venta/venta.module';
     StockModule,
     GrupoPrecioEspecialModule,
     VentaModule,
+    GananciaModule,
   ],
 })
 export class AppModule {}
