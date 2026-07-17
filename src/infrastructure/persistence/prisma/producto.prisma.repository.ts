@@ -42,17 +42,17 @@ export class ProductoPrismaRepository implements ProductoRepository {
     }
 
     // Con búsqueda: se separa en palabras sueltas. Un producto aparece si TODAS las palabras
-    // están en algún lado (nombre, marca, código o nombres alternativos), sin importar el orden
-    // ni mayúsculas/minúsculas, y sin exigir que estén pegadas (ej. "cinta 15" encuentra
-    // "Cinta de goteo 15 cm").
+    // están en algún lado (nombre, marca, código o nombres alternativos), sin importar el orden,
+    // mayúsculas/minúsculas ni tildes, y sin exigir que estén pegadas (ej. "cinta 15" encuentra
+    // "Cinta de goteo 15 cm", y "compresion" sin tilde encuentra "compresión").
     const palabras = filtros.search.trim().split(/\s+/).filter(Boolean);
     const condicionesPorPalabra = palabras.map((palabra) => {
       const comodin = `%${palabra}%`;
       return Prisma.sql`(
-        "nombre" ILIKE ${comodin} OR
-        "marca" ILIKE ${comodin} OR
+        unaccent("nombre") ILIKE unaccent(${comodin}) OR
+        unaccent("marca") ILIKE unaccent(${comodin}) OR
         "codigo" ILIKE ${comodin} OR
-        EXISTS (SELECT 1 FROM unnest("nombresAlternativos") AS alt WHERE alt ILIKE ${comodin})
+        EXISTS (SELECT 1 FROM unnest("nombresAlternativos") AS alt WHERE unaccent(alt) ILIKE unaccent(${comodin}))
       )`;
     });
 
