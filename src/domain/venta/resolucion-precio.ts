@@ -250,6 +250,23 @@ export function resolverPrecioLinea(input: ResolverPrecioInput): ResultadoPrecio
     throw new Error(`"${producto.nombre}" está marcado para vender solo por paquete, pero no tiene unidades por paquete definidas`);
   }
 
+  // Productos con "redondeoSiempreArriba" (ej. Grasa, se vende de 3 en 3): ignoran por completo
+  // la modalidad de venta de la sucursal (PIEZA/PAQUETE/AMBOS) — nunca exigen el paquete
+  // completo, siempre calculan proporcional a la cantidad exacta pedida, redondeando arriba.
+  if (producto.redondeoSiempreArriba) {
+    const categoria = categoriaGrupoEspecial ?? categoriaEfectivaDelCliente(rolCliente, producto.tipoProducto);
+    if (esPaqueteCompleto) {
+      return {
+        precioUnitario: precioPorPaquete(precio, categoria, unidadesPorPaquete, cantidad, true),
+        categoriaUsada: categoria,
+      };
+    }
+    return {
+      precioUnitario: precioProporcionalConRedondeo(precio, categoria, unidadesPorPaquete, cantidad, true),
+      categoriaUsada: categoria,
+    };
+  }
+
   // 1. Grupo de Precio Especial — siempre por paquete cerrado, nunca suelto
   if (categoriaGrupoEspecial) {
     if (!esPaqueteCompleto) {

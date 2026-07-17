@@ -400,5 +400,20 @@ r = resolverPrecioLinea({
 });
 check('Producto normal (Aldaba) sin redondeoSiempreArriba sigue con redondeo comercial (6.25 sin redondear)', Math.abs(r.precioUnitario * 3 - 6.25) < 0.0001, r);
 
+// Caso 37: Grasa en sucursal PAQUETE-only (Central la Cancha), Mayorista pide 6 (no es la caja completa de 24)
+// -> NO debe rechazar, debe calcular proporcional igual (140/24*6=35 exacto), ignorando la restriccion de la sucursal
+r = resolverPrecioLinea({
+  producto: grasa, precio: precioGrasa, rolCliente: 'MAYOR_1',
+  modalidadVentaEfectiva: 'PAQUETE', categoriaGrupoEspecial: null, cantidad: 6,
+});
+check('Grasa en sucursal PAQUETE-only, Mayor pide 6 (no exige caja completa) = 35 (140/24*6)', Math.abs(r.precioUnitario * 6 - 35) < 0.0001, r);
+
+// Caso 38: mismo caso pero con 3 (no exacto de 24) -> tampoco rechaza, redondea arriba (17.5->18)
+r = resolverPrecioLinea({
+  producto: grasa, precio: precioGrasa, rolCliente: 'MAYOR_1',
+  modalidadVentaEfectiva: 'PAQUETE', categoriaGrupoEspecial: null, cantidad: 3,
+});
+check('Grasa en sucursal PAQUETE-only, Mayor pide 3 = 18 (redondeoSiempreArriba, no rechaza)', Math.abs(r.precioUnitario * 3 - 18) < 0.0001, r);
+
 console.log(`\n${fallas === 0 ? 'TODO OK' : `${fallas} FALLA(S) ENCONTRADA(S)`}`);
 process.exit(fallas === 0 ? 0 : 1);
