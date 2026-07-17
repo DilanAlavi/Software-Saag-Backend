@@ -35,4 +35,8 @@ export class ActualizarProductoDto {
   @IsOptional()
   @IsBoolean()
   ventaSoloPorPaquete?: boolean;
+
+  @IsOptional()
+  @IsString()
+  unidadVenta?: string;
 }
