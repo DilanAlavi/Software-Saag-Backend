@@ -301,5 +301,49 @@ r = resolverPrecioLinea({
 });
 check('Producto sin unidadVentaTamano: Carpintero sigue el comportamiento anterior (Carpinteria=58, fuera de rubro FERRETERIA cae a Standard2=60)', r.precioUnitario === 60, r);
 
+// ---------- Caso nuevo: unidadVentaTamano + precioCaja combinados (Bisagra "normal") ----------
+// Bisagra bispot semicodo normal: paquete=2 (par), caja=100 piezas (50 pares), carpinteria=5,
+// precioCaja=4.6 (mas barato, se activa solo al llegar a la cantidad de caja completa)
+const bisagraNormal = {
+  nombre: 'Bisagra bispot semicodo normal', tipoProducto: 'CARPINTERIA',
+  unidadesPorPaquete: 2, unidadesPorCaja: 100, ventaSoloPorPaquete: true, unidadVentaTamano: 2,
+};
+const precioBisagraNormal = {
+  precioCosto: 3.8, menor1: 6, menor2: 5.5, mayor1: 4.8, mayor2: 4.8,
+  plomeria: 5, carpinteria: 5, electricista: 5,
+  precioCaja: 4.6, precioPiezaSuelta: null,
+  cantidadMinimaDescuentoMenor1: null, precioDescuentoMenor1: null,
+};
+
+// Caso 27: Carpintero comprando menos de la caja (10 pares = 20 piezas) = precio plano normal (5)
+r = resolverPrecioLinea({
+  producto: bisagraNormal, precio: precioBisagraNormal, rolCliente: 'CARPINTERIA',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 20,
+});
+check('Carpintero 10 pares (menos de 1 caja de 50) = precio plano normal (5 el par)', Math.abs(r.precioUnitario * 2 - 5) < 0.0001, r);
+
+// Caso 28: Carpintero comprando exactamente la caja completa (50 pares = 100 piezas) = precioCaja (4.6)
+r = resolverPrecioLinea({
+  producto: bisagraNormal, precio: precioBisagraNormal, rolCliente: 'CARPINTERIA',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 100,
+});
+check('Carpintero 50 pares (1 caja completa) = precioCaja (4.6 el par)', Math.abs(r.precioUnitario * 2 - 4.6) < 0.0001, r);
+
+// Caso 29: Carpintero comprando mas de una caja (60 pares = 120 piezas) = sigue precioCaja (4.6)
+r = resolverPrecioLinea({
+  producto: bisagraNormal, precio: precioBisagraNormal, rolCliente: 'CARPINTERIA',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 120,
+});
+check('Carpintero 60 pares (mas de 1 caja) = sigue precioCaja (4.6 el par)', Math.abs(r.precioUnitario * 2 - 4.6) < 0.0001, r);
+
+// Caso 30: producto por par SIN precioCaja (ej. BisCodolento con "NO") sigue siempre plano, sin importar cantidad
+const bisagraSinCaja = { ...bisagraNormal };
+const precioSinCaja = { ...precioBisagraNormal, precioCaja: null, carpinteria: 10 };
+r = resolverPrecioLinea({
+  producto: bisagraSinCaja, precio: precioSinCaja, rolCliente: 'CARPINTERIA',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 100,
+});
+check('Producto sin precioCaja: Carpintero con 50 pares sigue con precio plano normal (10 el par)', Math.abs(r.precioUnitario * 2 - 10) < 0.0001, r);
+
 console.log(`\n${fallas === 0 ? 'TODO OK' : `${fallas} FALLA(S) ENCONTRADA(S)`}`);
 process.exit(fallas === 0 ? 0 : 1);

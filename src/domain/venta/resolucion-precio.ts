@@ -247,7 +247,12 @@ export function resolverPrecioLinea(input: ResolverPrecioInput): ResultadoPrecio
 
   // Roles de oficio en un producto con unidad de venta (ej. "par"): precio plano siempre,
   // sin importar sucursal ni cantidad. Se resuelve antes de cualquier chequeo de paquete/caja.
+  // Excepción: si el producto tiene precioCaja cargado y la cantidad llega a la de una caja
+  // completa, ese precio (más barato) manda por encima del plano normal.
   if (unidadVentaTamano !== null && CATEGORIAS_DE_OFICIO.includes(categoriaCliente)) {
+    if (precio.precioCaja !== null && producto.unidadesPorCaja !== null && cantidad >= producto.unidadesPorCaja) {
+      return { precioUnitario: precio.precioCaja / unidadVentaTamano, categoriaUsada: categoriaCliente };
+    }
     return {
       precioUnitario: obtenerPrecioCategoria(precio, categoriaCliente) / unidadVentaTamano,
       categoriaUsada: categoriaCliente,
