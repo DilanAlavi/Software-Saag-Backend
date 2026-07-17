@@ -28,6 +28,7 @@ export class ProductoPrismaRepository implements ProductoRepository {
       p.unidadesPorCaja,
       p.ventaSoloPorPaquete,
       p.unidadVenta,
+      p.unidadVentaTamano,
     );
   }
 
@@ -89,6 +90,7 @@ export class ProductoPrismaRepository implements ProductoRepository {
           unidadesPorCaja: data.unidadesPorCaja,
           ventaSoloPorPaquete: data.ventaSoloPorPaquete ?? false,
           unidadVenta: data.unidadVenta,
+          unidadVentaTamano: data.unidadVentaTamano,
         },
       });
       await tx.historialProducto.create({
@@ -115,6 +117,7 @@ export class ProductoPrismaRepository implements ProductoRepository {
         unidadesPorCaja: data.unidadesPorCaja,
         ventaSoloPorPaquete: data.ventaSoloPorPaquete,
         unidadVenta: data.unidadVenta,
+        unidadVentaTamano: data.unidadVentaTamano,
       },
     });
     return this.toEntity(actualizado);

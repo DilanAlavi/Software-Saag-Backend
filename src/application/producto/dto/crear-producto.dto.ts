@@ -37,4 +37,9 @@ export class CrearProductoDto {
   @IsOptional()
   @IsString()
   unidadVenta?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  unidadVentaTamano?: number;
 }

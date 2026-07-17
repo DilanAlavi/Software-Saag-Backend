@@ -5,6 +5,13 @@ export interface ProductoParaPrecio {
   unidadesPorCaja: number | null;
   /** Si es true, los precios de categoría representan el precio del PAQUETE, no de la pieza. */
   ventaSoloPorPaquete: boolean;
+  /**
+   * Cuántas piezas hace 1 unidad de venta (ej. 2 para "par"). Cuando está presente, activa
+   * la lógica de precio por unidad de venta: los roles de oficio (Carpintero/Plomero/
+   * Electricista) siempre pagan un precio plano por esa unidad, y Standard/Mayor pasan a un
+   * único precio de paquete completo en cuanto la cantidad llega a la de un paquete.
+   */
+  unidadVentaTamano: number | null;
 }
 
 export interface PrecioParaResolucion {
@@ -109,6 +116,33 @@ function precioConDescuentoVolumen(
   return base;
 }
 
+/**
+ * Precio por unidad de venta (ej. "par") cuando el producto tiene unidadVentaTamano definido:
+ * - Carpintero/Plomero/Electricista: SIEMPRE precio plano por esa unidad (ej. por par), sin
+ *   importar la cantidad ni si compran caja completa o no.
+ * - El resto de roles (Standard/Mayor): en cuanto la cantidad llega a la de un paquete completo,
+ *   un solo precio (el de su categoría) aplicado proporcional a toda la cantidad, sin mezclar
+ *   con el precio suelto. Por debajo de esa cantidad, precio suelto por unidad de venta.
+ */
+function precioParaCategoriaConUnidadVenta(
+  precio: PrecioParaResolucion,
+  categoria: string,
+  cantidad: number,
+  unidadesPorPaquete: number,
+  unidadVentaTamano: number,
+): number {
+  if (CATEGORIAS_DE_OFICIO.includes(categoria)) {
+    return obtenerPrecioCategoria(precio, categoria) / unidadVentaTamano;
+  }
+  if (cantidad >= unidadesPorPaquete) {
+    return precioConDescuentoVolumen(precio, categoria, cantidad) / unidadesPorPaquete;
+  }
+  if (precio.precioPiezaSuelta !== null) {
+    return precio.precioPiezaSuelta / unidadVentaTamano;
+  }
+  return precioProporcionalConRedondeo(precio, categoria, unidadesPorPaquete, cantidad);
+}
+
 export interface ResolverPrecioInput {
   producto: ProductoParaPrecio;
   precio: PrecioParaResolucion;
@@ -209,10 +243,26 @@ export function resolverPrecioLinea(input: ResolverPrecioInput): ResultadoPrecio
   }
 
   const categoriaCliente = categoriaEfectivaDelCliente(rolCliente, producto.tipoProducto);
+  const unidadVentaTamano = producto.unidadVentaTamano;
+
+  // Roles de oficio en un producto con unidad de venta (ej. "par"): precio plano siempre,
+  // sin importar sucursal ni cantidad. Se resuelve antes de cualquier chequeo de paquete/caja.
+  if (unidadVentaTamano !== null && CATEGORIAS_DE_OFICIO.includes(categoriaCliente)) {
+    return {
+      precioUnitario: obtenerPrecioCategoria(precio, categoriaCliente) / unidadVentaTamano,
+      categoriaUsada: categoriaCliente,
+    };
+  }
 
   // 2. La sucursal solo vende suelto: precio de pieza suelta si está fijado; si no, se divide
   // proporcionalmente el precio del paquete con el redondeo comercial.
   if (modalidadVentaEfectiva === 'PIEZA') {
+    if (unidadVentaTamano !== null) {
+      return {
+        precioUnitario: precioParaCategoriaConUnidadVenta(precio, categoriaCliente, cantidad, unidadesPorPaquete, unidadVentaTamano),
+        categoriaUsada: categoriaCliente,
+      };
+    }
     if (precio.precioPiezaSuelta !== null) {
       return { precioUnitario: precio.precioPiezaSuelta, categoriaUsada: 'PIEZA_SUELTA' };
     }
@@ -239,6 +289,13 @@ export function resolverPrecioLinea(input: ResolverPrecioInput): ResultadoPrecio
   if (esPaqueteCompleto) {
     return {
       precioUnitario: precioPorPaquete(precio, categoriaCliente, unidadesPorPaquete, cantidad),
+      categoriaUsada: categoriaCliente,
+    };
+  }
+
+  if (unidadVentaTamano !== null) {
+    return {
+      precioUnitario: precioParaCategoriaConUnidadVenta(precio, categoriaCliente, cantidad, unidadesPorPaquete, unidadVentaTamano),
       categoriaUsada: categoriaCliente,
     };
   }

@@ -90,6 +90,7 @@ export class VentaPrismaRepository implements VentaRepository {
         unidadesPorPaquete: producto.unidadesPorPaquete,
         unidadesPorCaja: producto.unidadesPorCaja,
         ventaSoloPorPaquete: producto.ventaSoloPorPaquete,
+        unidadVentaTamano: producto.unidadVentaTamano,
       },
       precio: {
         precioCosto: Number(producto.precio.precioCosto),

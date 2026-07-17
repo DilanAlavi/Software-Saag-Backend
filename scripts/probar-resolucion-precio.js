@@ -11,7 +11,7 @@ function check(nombre, cond, detalle) {
 }
 
 // Producto Disco Flap: paquete de 10, precio de categoría = precio del PAQUETE (ventaSoloPorPaquete=true)
-const discoFlap = { nombre: 'Disco Flap 4.5"', tipoProducto: 'FERRETERIA', unidadesPorPaquete: 10, unidadesPorCaja: null, ventaSoloPorPaquete: true };
+const discoFlap = { nombre: 'Disco Flap 4.5"', tipoProducto: 'FERRETERIA', unidadesPorPaquete: 10, unidadesPorCaja: null, ventaSoloPorPaquete: true, unidadVentaTamano: null };
 const precioDisco = {
   precioCosto: 6, menor1: 9, menor2: 8.5, mayor1: 7.5, mayor2: 7,
   plomeria: 8, carpinteria: 8, electricista: 8,
@@ -58,7 +58,7 @@ r = resolverPrecioLinea({
 check('Sucursal AMBOS con 7u (no exacto) = precio pieza suelta (1.00)', r.precioUnitario === 1, r);
 
 // Caso 6: Grupo de Precio Especial (Mayor2) sobre producto de Cintas (sin paquete)
-const cinta = { nombre: 'Cinta de goteo', tipoProducto: 'PLOMERIA', unidadesPorPaquete: null, unidadesPorCaja: null, ventaSoloPorPaquete: false };
+const cinta = { nombre: 'Cinta de goteo', tipoProducto: 'PLOMERIA', unidadesPorPaquete: null, unidadesPorCaja: null, ventaSoloPorPaquete: false, unidadVentaTamano: null };
 const precioCinta = {
   precioCosto: 60, menor1: 90, menor2: 85, mayor1: 75, mayor2: 70,
   plomeria: 80, carpinteria: 90, electricista: 90,
@@ -71,7 +71,7 @@ r = resolverPrecioLinea({
 check('Cliente Standard1 con grupo especial Mayor2 en Cintas = precio Mayor2 (70)', r.precioUnitario === 70, r);
 
 // Caso 7: mismo cliente comprando OTRO producto sin grupo especial = su precio normal Standard1
-const martillo = { nombre: 'Martillo', tipoProducto: 'FERRETERIA', unidadesPorPaquete: null, unidadesPorCaja: 20, ventaSoloPorPaquete: false };
+const martillo = { nombre: 'Martillo', tipoProducto: 'FERRETERIA', unidadesPorPaquete: null, unidadesPorCaja: 20, ventaSoloPorPaquete: false, unidadVentaTamano: null };
 const precioMartillo = {
   precioCosto: 45.5, menor1: 65, menor2: 60, mayor1: 55, mayor2: 52,
   plomeria: 58, carpinteria: 58, electricista: 58,
@@ -121,7 +121,7 @@ check('Cliente no registrado = precio Standard1 por defecto (65)', r.precioUnita
 
 // ---------- Casos nuevos: división proporcional por docena con redondeo comercial ----------
 // Aldaba: paquete/docena de 12, Mayor1 = 25 (precio de la docena), SIN precio pieza suelta cargado
-const aldaba = { nombre: 'Aldaba galvanizada', tipoProducto: 'FERRETERIA', unidadesPorPaquete: 12, unidadesPorCaja: null, ventaSoloPorPaquete: true };
+const aldaba = { nombre: 'Aldaba galvanizada', tipoProducto: 'FERRETERIA', unidadesPorPaquete: 12, unidadesPorCaja: null, ventaSoloPorPaquete: true, unidadVentaTamano: null };
 const precioAldaba = {
   precioCosto: 10, menor1: 30, menor2: 28, mayor1: 25, mayor2: 24,
   plomeria: 26, carpinteria: 26, electricista: 26,
@@ -235,6 +235,71 @@ r = resolverPrecioLinea({
   modalidadVentaEfectiva: 'PIEZA', categoriaGrupoEspecial: null, cantidad: 500,
 });
 check('Producto sin precioCaja: Mayor2 con cantidad alta sigue con su precio normal (70)', r.precioUnitario === 70, r);
+
+// ---------- Casos nuevos: unidad de venta "par" (bisagra dorada FERRAWY) ----------
+// Paquete comercial = 24 piezas (12 pares). Unidad de venta = par (2 piezas).
+// Menor1=115 (precio de 1 paquete completo), precioPiezaSuelta=22 (precio suelto por par),
+// Carpinteria=9 (precio plano por par, siempre).
+const bisagraDorada = {
+  nombre: 'Bisagra 4" dorado', tipoProducto: 'CARPINTERIA',
+  unidadesPorPaquete: 24, unidadesPorCaja: 72, ventaSoloPorPaquete: true, unidadVentaTamano: 2,
+};
+const precioBisagraDorada = {
+  precioCosto: 100, menor1: 115, menor2: 115, mayor1: 105, mayor2: 105,
+  plomeria: 9, carpinteria: 9, electricista: 9,
+  precioCaja: null, precioPiezaSuelta: 22,
+  cantidadMinimaDescuentoMenor1: null, precioDescuentoMenor1: null,
+};
+
+// Caso 20: Carpintero comprando 2 piezas (1 par) = precio plano por par (9), sin importar nada
+r = resolverPrecioLinea({
+  producto: bisagraDorada, precio: precioBisagraDorada, rolCliente: 'CARPINTERIA',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 2,
+});
+check('Carpintero 1 par (2 piezas) = precio plano por par (9)', r.precioUnitario * 2 === 9, r);
+
+// Caso 21: Carpintero comprando 48 piezas (24 pares, o sea 2 paquetes) = SIGUE precio plano por par (9)
+r = resolverPrecioLinea({
+  producto: bisagraDorada, precio: precioBisagraDorada, rolCliente: 'CARPINTERIA',
+  modalidadVentaEfectiva: 'PAQUETE', categoriaGrupoEspecial: null, cantidad: 48,
+});
+check('Carpintero 24 pares (48 piezas), sucursal PAQUETE-only = igual precio plano por par (9), sin excepcion', r.precioUnitario * 2 === 9, r);
+
+// Caso 22: Standard1 (random) pide 10 piezas (5 pares, menos de 1 paquete=24) = precio suelto por par (22)
+r = resolverPrecioLinea({
+  producto: bisagraDorada, precio: precioBisagraDorada, rolCliente: 'STANDARD_1',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 10,
+});
+check('Standard1 5 pares (10 piezas, menos de 1 paquete) = precio suelto por par (22)', Math.abs(r.precioUnitario * 2 - 22) < 0.0001, r);
+
+// Caso 23: Standard1 pide 40 piezas (20 pares, mas de 1 paquete de 24 pero NO exacto) = UN SOLO precio Menor1, sin mezclar
+r = resolverPrecioLinea({
+  producto: bisagraDorada, precio: precioBisagraDorada, rolCliente: 'STANDARD_1',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 40,
+});
+// 40 piezas >= 24 (1 paquete) -> precio Menor1 (115) proporcional: 115/24 por pieza
+check('Standard1 20 pares (40 piezas, pasa de 1 paquete, no exacto) = un solo precio Menor1 (115/24 por pieza)', Math.abs(r.precioUnitario - 115 / 24) < 0.0001, r);
+
+// Caso 24: Standard1 pide exactamente 24 piezas (1 paquete exacto) = precio Menor1 normal (ya funcionaba)
+r = resolverPrecioLinea({
+  producto: bisagraDorada, precio: precioBisagraDorada, rolCliente: 'STANDARD_1',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 24,
+});
+check('Standard1 exactamente 1 paquete (24 piezas) = precio Menor1 (115/24 por pieza)', Math.abs(r.precioUnitario - 115 / 24) < 0.0001, r);
+
+// Caso 25: Mayorista (Mayor1) comprando caja cerrada exacta (72 piezas = 3 paquetes) = precio Mayor1 normal
+r = resolverPrecioLinea({
+  producto: bisagraDorada, precio: precioBisagraDorada, rolCliente: 'MAYOR_1',
+  modalidadVentaEfectiva: 'AMBOS', categoriaGrupoEspecial: null, cantidad: 72,
+});
+check('Mayorista 72 piezas (3 paquetes exactos) = precio Mayor1 (105/24 por pieza)', Math.abs(r.precioUnitario - 105 / 24) < 0.0001, r);
+
+// Caso 26: Carpintero en sucursal donde el producto NO tiene unidadVentaTamano (ej. Martillo) = sigue el comportamiento de siempre (sin cambios)
+r = resolverPrecioLinea({
+  producto: martillo, precio: precioMartillo, rolCliente: 'CARPINTERIA',
+  modalidadVentaEfectiva: 'PIEZA', categoriaGrupoEspecial: null, cantidad: 3,
+});
+check('Producto sin unidadVentaTamano: Carpintero sigue el comportamiento anterior (Carpinteria=58, fuera de rubro FERRETERIA cae a Standard2=60)', r.precioUnitario === 60, r);
 
 console.log(`\n${fallas === 0 ? 'TODO OK' : `${fallas} FALLA(S) ENCONTRADA(S)`}`);
 process.exit(fallas === 0 ? 0 : 1);

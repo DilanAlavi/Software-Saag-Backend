@@ -58,6 +58,9 @@ model Producto {
   ventaSoloPorPaquete Boolean      @default(false)
   // Etiqueta para mostrar en pantalla (ej. "par", "juego"). Null = se muestra "pcs".
   unidadVenta         String?
+  // Cuantas piezas hace 1 unidad de venta (ej. 2 para "par"). Puede ser distinto de
+  // unidadesPorPaquete (ej. una bisagra se vende por par de 2, pero el paquete comercial trae 24).
+  unidadVentaTamano   Int?
 
   historial HistorialProducto[]
   precio    Precio?

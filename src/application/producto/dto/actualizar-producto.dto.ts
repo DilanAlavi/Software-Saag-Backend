@@ -39,4 +39,9 @@ export class ActualizarProductoDto {
   @IsOptional()
   @IsString()
   unidadVenta?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  unidadVentaTamano?: number;
 }
