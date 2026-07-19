@@ -38,6 +38,7 @@ export class AuthService {
         apellidoPaterno: usuario.apellidoPaterno,
         rol: usuario.rol,
         sucursalId: usuario.sucursalId,
+        sucursal: usuario.sucursal ? { id: usuario.sucursal.id, nombre: usuario.sucursal.nombre } : null,
       },
     };
   }
