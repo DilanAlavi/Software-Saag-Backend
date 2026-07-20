@@ -26,11 +26,13 @@ export class UsuarioPrismaRepository implements UsuarioRepository {
       u.rol,
       u.estado,
       u.sucursalId,
+      u.fechaRegistro,
+      u.sucursal ?? null,
     );
   }
 
   async findByUsername(username: string): Promise<Usuario | null> {
-    const u = await this.prisma.usuario.findUnique({ where: { username } });
+    const u = await this.prisma.usuario.findUnique({ where: { username }, include: { sucursal: true } });
     return u ? this.toEntity(u) : null;
   }
 
