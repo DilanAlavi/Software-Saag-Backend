@@ -44,6 +44,8 @@ export class VentaPrismaRepository implements VentaRepository {
         precioUnitario: Number(d.precioUnitario),
         total: Number(d.total),
         entregado: d.entregado,
+        unidadVenta: d.unidadVenta,
+        unidadVentaTamano: d.unidadVentaTamano,
       })),
     };
   }
@@ -127,6 +129,8 @@ export class VentaPrismaRepository implements VentaRepository {
       cantidad: linea.cantidad,
       precioUnitario: resultado.precioUnitario,
       total: totalLinea,
+      unidadVenta: producto.unidadVenta,
+      unidadVentaTamano: producto.unidadVentaTamano,
     };
   }
 
@@ -180,6 +184,8 @@ export class VentaPrismaRepository implements VentaRepository {
               cantidad: l.cantidad,
               precioUnitario: l.precioUnitario,
               total: l.total,
+              unidadVenta: l.unidadVenta,
+              unidadVentaTamano: l.unidadVentaTamano,
             })),
           },
         },

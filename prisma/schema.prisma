@@ -125,6 +125,11 @@ model DetalleVenta {
   precioUnitario  Decimal
   total           Decimal
   entregado       Boolean @default(false)
+  // Congelados al momento de la venta (igual que nombreProducto): como se mostraba la
+  // unidad de venta de este producto en ese momento, para que un cambio futuro en el
+  // producto no altere como se ve una venta ya realizada.
+  unidadVenta         String?
+  unidadVentaTamano   Int?
 }
 
 model Precio {

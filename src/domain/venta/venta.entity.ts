@@ -9,6 +9,8 @@ export interface DetalleVentaConDetalle {
   precioUnitario: number;
   total: number;
   entregado: boolean;
+  unidadVenta: string | null;
+  unidadVentaTamano: number | null;
 }
 
 export interface VentaConDetalle {

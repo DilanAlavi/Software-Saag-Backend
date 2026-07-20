@@ -28,6 +28,8 @@ export interface LineaCotizada {
   cantidad: number;
   precioUnitario: number;
   total: number;
+  unidadVenta: string | null;
+  unidadVentaTamano: number | null;
 }
 
 export interface VentaCotizada {

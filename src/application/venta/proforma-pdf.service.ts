@@ -6,6 +6,14 @@ const MARGEN = 30;
 const ANCHO_PAGINA = 420; // A5
 const ANCHO_CONTENIDO = ANCHO_PAGINA - MARGEN * 2;
 
+function formatearCantidad(cantidad: number, unidadVenta: string | null, unidadVentaTamano: number | null): string {
+  const unidad = unidadVenta || 'pc';
+  if (unidadVentaTamano) {
+    return `${cantidad / unidadVentaTamano} ${unidad}`;
+  }
+  return `${cantidad} ${unidad}`;
+}
+
 @Injectable()
 export class ProformaPdfService {
   generar(venta: VentaConDetalle): Promise<Buffer> {
@@ -51,7 +59,12 @@ export class ProformaPdfService {
         const y = doc.y;
         doc.text(detalle.nombreProducto, col.nombre, y, { width: anchoNombre });
         const yTrasNombre = doc.y;
-        doc.text(String(detalle.cantidad), col.cantidad, y, { width: col.precio - col.cantidad });
+        doc.text(
+          formatearCantidad(detalle.cantidad, detalle.unidadVenta, detalle.unidadVentaTamano),
+          col.cantidad,
+          y,
+          { width: col.precio - col.cantidad },
+        );
         doc.text(detalle.precioUnitario.toFixed(2), col.precio, y, { width: col.total - col.precio });
         doc.text(detalle.total.toFixed(2), col.total, y, { width: anchoTotal, align: 'right' });
         doc.y = Math.max(doc.y, yTrasNombre);
