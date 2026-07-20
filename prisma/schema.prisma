@@ -66,12 +66,16 @@ model Producto {
   redondeoSiempreArriba Boolean @default(false)
   // Aviso libre para mostrar en pantalla al elegir el producto (ej. "Se vende de 3 en 3").
   notaVenta           String?
+  // Si está lleno, la proforma imprime este nombre en vez de "nombre" (ej. marcas que no
+  // queremos mostrar en el comprobante oficial, como "3M" o "Italy").
+  nombreParaProforma  String?
 
   historial HistorialProducto[]
   precio    Precio?
   stock     Stock[]
   gruposPrecioEspecial GrupoPrecioEspecialProducto[]
   detallesVenta DetalleVenta[]
+  modalidadesSucursal ProductoModalidadSucursal[]
 }
 
 model Stock {
@@ -218,6 +222,23 @@ model Sucursal {
   usuarios               Usuario[]
   stock                  Stock[]
   ventas                 Venta[]
+  modalidadesProducto    ProductoModalidadSucursal[]
+}
+
+// Excepción puntual: este producto, en esta sucursal, se vende de esta manera —
+// gana por encima del default de la sucursal y del default del producto. La gran
+// mayoría de productos no tienen fila acá; solo se crea cuando hace falta una
+// excepción real (ej. un producto normalmente suelto que en una sucursal puntual
+// se vende cerrado, o viceversa).
+model ProductoModalidadSucursal {
+  id         Int                   @id @default(autoincrement())
+  productoId Int
+  producto   Producto              @relation(fields: [productoId], references: [id])
+  sucursalId Int
+  sucursal   Sucursal              @relation(fields: [sucursalId], references: [id])
+  modalidad  ModalidadVentaPaquete
+
+  @@unique([productoId, sucursalId])
 }
 
 model Usuario {

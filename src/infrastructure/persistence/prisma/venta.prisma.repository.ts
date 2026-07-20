@@ -59,10 +59,10 @@ export class VentaPrismaRepository implements VentaRepository {
     db: any,
     clienteRol: string,
     clienteId: number,
-    sucursal: { modalidadVentaPaquete: ModalidadVenta | null },
+    sucursal: { id: number; modalidadVentaPaquete: ModalidadVenta | null },
     linea: { productoId: number; cantidad: number },
   ): Promise<LineaCotizada> {
-    const [producto, grupoEspecial] = await Promise.all([
+    const [producto, grupoEspecial, excepcion] = await Promise.all([
       db.producto.findUniqueOrThrow({
         where: { id: linea.productoId },
         include: { precio: true },
@@ -74,14 +74,20 @@ export class VentaPrismaRepository implements VentaRepository {
         },
         include: { grupo: true },
       }),
+      db.productoModalidadSucursal.findUnique({
+        where: { productoId_sucursalId: { productoId: linea.productoId, sucursalId: sucursal.id } },
+      }),
     ]);
 
     if (!producto.precio) {
       throw new Error(`"${producto.nombre}" todavía no tiene precios cargados`);
     }
 
+    // Cascada: excepción puntual producto+sucursal -> default de la sucursal -> default del producto.
     const modalidadVentaEfectiva: ModalidadVenta =
-      sucursal.modalidadVentaPaquete ?? (producto.ventaSoloPorPaquete ? 'PAQUETE' : 'PIEZA');
+      excepcion?.modalidad ??
+      sucursal.modalidadVentaPaquete ??
+      (producto.ventaSoloPorPaquete ? 'PAQUETE' : 'PIEZA');
 
     const resultado = resolverPrecioLinea({
       producto: {
@@ -117,7 +123,7 @@ export class VentaPrismaRepository implements VentaRepository {
     const totalLinea = resultado.precioUnitario * linea.cantidad;
     return {
       productoId: producto.id,
-      nombreProducto: producto.nombre,
+      nombreProducto: producto.nombreParaProforma ?? producto.nombre,
       cantidad: linea.cantidad,
       precioUnitario: resultado.precioUnitario,
       total: totalLinea,
@@ -128,7 +134,7 @@ export class VentaPrismaRepository implements VentaRepository {
     db: any,
     clienteRol: string,
     clienteId: number,
-    sucursal: { modalidadVentaPaquete: ModalidadVenta | null },
+    sucursal: { id: number; modalidadVentaPaquete: ModalidadVenta | null },
     lineas: { productoId: number; cantidad: number }[],
   ): Promise<LineaCotizada[]> {
     return Promise.all(lineas.map((linea) => this.resolverLinea(db, clienteRol, clienteId, sucursal, linea)));

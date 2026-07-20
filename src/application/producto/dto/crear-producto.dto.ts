@@ -50,4 +50,8 @@ export class CrearProductoDto {
   @IsOptional()
   @IsString()
   notaVenta?: string;
+
+  @IsOptional()
+  @IsString()
+  nombreParaProforma?: string;
 }

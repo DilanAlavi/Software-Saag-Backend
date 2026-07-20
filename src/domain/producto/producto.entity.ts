@@ -17,5 +17,6 @@ export class Producto {
     public readonly unidadVentaTamano: number | null,
     public readonly redondeoSiempreArriba: boolean,
     public readonly notaVenta: string | null,
+    public readonly nombreParaProforma: string | null,
   ) {}
 }

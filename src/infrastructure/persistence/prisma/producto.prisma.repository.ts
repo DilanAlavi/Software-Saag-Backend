@@ -31,6 +31,7 @@ export class ProductoPrismaRepository implements ProductoRepository {
       p.unidadVentaTamano,
       p.redondeoSiempreArriba,
       p.notaVenta,
+      p.nombreParaProforma,
     );
   }
 
@@ -95,6 +96,7 @@ export class ProductoPrismaRepository implements ProductoRepository {
           unidadVentaTamano: data.unidadVentaTamano,
           redondeoSiempreArriba: data.redondeoSiempreArriba ?? false,
           notaVenta: data.notaVenta,
+          nombreParaProforma: data.nombreParaProforma,
         },
       });
       await tx.historialProducto.create({
@@ -124,6 +126,7 @@ export class ProductoPrismaRepository implements ProductoRepository {
         unidadVentaTamano: data.unidadVentaTamano,
         redondeoSiempreArriba: data.redondeoSiempreArriba,
         notaVenta: data.notaVenta,
+        nombreParaProforma: data.nombreParaProforma,
       },
     });
     return this.toEntity(actualizado);

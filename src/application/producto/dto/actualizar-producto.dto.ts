@@ -52,4 +52,8 @@ export class ActualizarProductoDto {
   @IsOptional()
   @IsString()
   notaVenta?: string;
+
+  @IsOptional()
+  @IsString()
+  nombreParaProforma?: string;
 }

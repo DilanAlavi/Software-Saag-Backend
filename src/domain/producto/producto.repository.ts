@@ -21,6 +21,7 @@ export interface CrearProductoInput {
   unidadVentaTamano?: number;
   redondeoSiempreArriba?: boolean;
   notaVenta?: string;
+  nombreParaProforma?: string;
 }
 
 export interface HistorialProductoRegistro {
@@ -43,6 +44,7 @@ export interface ActualizarProductoInput {
   unidadVentaTamano?: number;
   redondeoSiempreArriba?: boolean;
   notaVenta?: string;
+  nombreParaProforma?: string;
 }
 
 export interface ProductoRepository {
